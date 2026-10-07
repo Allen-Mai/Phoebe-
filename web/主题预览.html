@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>成熟粉 · 配色对照</title>
+<style>
+  body{
+    margin:0;padding:26px 22px 40px;
+    background:#eceef0;color:#2c3338;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:14px;line-height:1.65;
+  }
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#66727a;font-size:13px;margin-bottom:22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;align-items:start}
+  .card{border-radius:14px;overflow:hidden;border:1px solid #d5dbdf;background:#fff;
+        box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .card.cur{border-color:#b4647c;box-shadow:0 0 0 2px rgba(180,100,124,.25)}
+  .name{padding:11px 15px 10px;background:#f6f8f9;border-bottom:1px solid #e4e9eb}
+  .name b{font-size:14.5px}
+  .name .tag{float:right;font-size:11px;font-weight:700;color:#b4647c;
+    background:#f4e7ec;border-radius:999px;padding:1px 9px}
+  .name small{display:block;color:#7b868c;font-size:11.5px;margin-top:2px}
+  .mock{padding:15px;background:var(--bg);color:var(--text)}
+  .h{font-size:15.5px;font-weight:700;padding-bottom:7px;border-bottom:2px solid var(--soft);margin-bottom:9px}
+  .meta{font-size:11.5px;color:var(--muted);margin-bottom:11px}
+  .chips{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .chip{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;letter-spacing:.03em}
+  .c-todo{background:#f4edde;color:var(--todo)}
+  .c-doing{background:var(--soft);color:var(--doing)}
+  .c-done{background:#e9f0ea;color:var(--done)}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:11.5px;
+    border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  th{background:var(--head);color:var(--headtext);text-align:left;padding:6px 9px;
+    font-weight:700;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.rh{background:var(--rh);font-weight:600;white-space:nowrap}
+  .lk{color:var(--accent);border-bottom:1px solid var(--accent);cursor:default}
+  .btnrow{margin-top:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  button{font:inherit;font-size:11.5px;padding:4px 12px;border-radius:8px;
+    border:1px solid var(--line);background:var(--soft);color:var(--text);cursor:default}
+  button.p{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.gh{background:#fff}
+  .heat{display:flex;gap:3px;margin-top:13px;align-items:center}
+  .cell{width:15px;height:15px;border-radius:3px}
+  .heat span{font-size:11px;color:var(--muted);margin-left:6px}
+  .hex{margin-top:13px;padding-top:11px;border-top:1px solid var(--line);
+    font-family:Consolas,Menlo,monospace;font-size:10.5px;color:var(--muted);line-height:1.85}
+  .hex b{color:var(--text);font-weight:600;font-family:inherit}
+</style>
+</head>
+<body>
+
+<h1>成熟粉 · 4 个方向</h1>
+<div class="sub" style="background:#fff6e5;border:1px solid #e6cfa0;color:#6b5320;
+     padding:10px 14px;border-radius:9px;margin-bottom:20px">
+  ⚠️ 这一页是<b>上一轮的色相备选</b>，用的是扁平样式。
+  日记本本体已经换成<b>三丽鸥粉 + 渐变高级版</b>了，两边外观不再一致 ——
+  这一页只用来对比「偏暖 / 偏冷 / 偏紫」的色相方向，别拿它当效果预览。
+</div>
+<div class="sub">
+  同一个界面，只换色板。看中哪个就告诉我名字（比如「要灰玫瑰」），我直接换到日记本上。
+  每张卡片底部有完整色值，想微调也可以直接说。
+</div>
+
+<div class="grid">
+
+  <!-- 1 干玫瑰 -->
+  <div class="card cur" style="
+      --bg:#faf7f8; --line:#e9dde1; --text:#3a3235; --muted:#8b7d82;
+      --accent:#b4647c; --soft:#f4e7ec; --head:#f7eff2; --headtext:#6b5a60; --rh:#fbf8f9;
+      --todo:#8a6d3b; --doing:#a8556d; --done:#4a7a5c;">
+    <div class="name"><span class="tag">当前用的</span><b>干玫瑰</b>
+      <small>Dusty Rose · 灰粉偏冷，最通用</small></div>
+    <div class="mock">
+      <div class="h">📔 2026-10-07</div>
+      <div class="meta">journals/2026_10_07.md</div>
+      <div class="chips">
+        <span class="chip c-todo">TODO</span>
+        <span class="chip c-doing">DOING</span>
+        <span class="chip c-done">DONE</span>
+      </div>
+      <table>
+        <tr><th>🗓️ 日期</th><th>💼 工作和进展</th></tr>
+        <tr><td class="rh">10-07</td><td>和 <span class="lk">张三</span> 确认了对齐方式</td></tr>
+        <tr><td class="rh">10-06</td><td>补全 <span class="lk">示例项目</span> 的关键决策</td></tr>
+      </table>
+      <div class="btnrow">
+        <button class="p">保存到浏览器</button>
+        <button class="gh">下载 .md</button>
+      </div>
+      <div class="heat">
+        <div class="cell" style="background:#f2e8ec"></div>
+        <div class="cell" style="background:#dcc2cb"></div>
+        <div class="cell" style="background:#c69aa8"></div>
+        <div class="cell" style="background:#a86c81"></div>
+        <div class="cell" style="background:#7d4658"></div>
+        <span>热力图</span>
+      </div>
+      <div class="hex">
+        底 <b>#faf7f8</b>　描边 <b>#e9dde1</b>　主色 <b>#b4647c</b><br>
+        深 <b>#8f4258</b>　淡底 <b>#f4e7ec</b>　文字 <b>#3a3235</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 豆沙粉 -->
+  <div class="card" style="
+      --bg:#fbf7f6; --line:#ead9d5; --text:#3b3230; --muted:#8c7c78;
+      --accent:#c07a6e; --soft:#f6e8e4; --head:#f8efeb; --headtext:#77574f; --rh:#fcf8f6;
+      --todo:#8a6d3b; --doing:#b06a5c; --done:#4a7a5c;">
+    <div class="name"><b>豆沙粉</b>
+      <small>Bean Paste · 粉里带橘，暖，最不"甜"</small></div>
+    <div class="mock">
+      <div class="h">📔 2026-10-07</div>
+      <div class="meta">journals/2026_10_07.md</div>
+      <div class="chips">
+        <span class="chip c-todo">TODO</span>
+        <span class="chip c-doing">DOING</span>
+        <span class="chip c-done">DONE</span>
+      </div>
+      <table>
+        <tr><th>🗓️ 日期</th><th>💼 工作和进展</th></tr>
+        <tr><td class="rh">10-07</td><td>和 <span class="lk">张三</span> 确认了对齐方式</td></tr>
+        <tr><td class="rh">10-06</td><td>补全 <span class="lk">示例项目</span> 的关键决策</td></tr>
+      </table>
+      <div class="btnrow">
+        <button class="p">保存到浏览器</button>
+        <button class="gh">下载 .md</button>
+      </div>
+      <div class="heat">
+        <div class="cell" style="background:#f6e8e4"></div>
+        <div class="cell" style="background:#e3c3ba"></div>
+        <div class="cell" style="background:#cf9c8f"></div>
+        <div class="cell" style="background:#b0705f"></div>
+        <div class="cell" style="background:#8a4f42"></div>
+        <span>热力图</span>
+      </div>
+      <div class="hex">
+        底 <b>#fbf7f6</b>　描边 <b>#ead9d5</b>　主色 <b>#c07a6e</b><br>
+        深 <b>#9c5749</b>　淡底 <b>#f6e8e4</b>　文字 <b>#3b3230</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 灰玫瑰 -->
+  <div class="card" style="
+      --bg:#f8f7f9; --line:#e2dee6; --text:#35313a; --muted:#827c8a;
+      --accent:#9b7f9e; --soft:#efe8f1; --head:#f4eff6; --headtext:#635a68; --rh:#faf8fb;
+      --todo:#837245; --doing:#8d6b90; --done:#4a7a5c;">
+    <div class="name"><b>灰玫瑰</b>
+      <small>Mauve · 粉里加灰紫，莫兰迪，最沉稳</small></div>
+    <div class="mock">
+      <div class="h">📔 2026-10-07</div>
+      <div class="meta">journals/2026_10_07.md</div>
+      <div class="chips">
+        <span class="chip c-todo">TODO</span>
+        <span class="chip c-doing">DOING</span>
+        <span class="chip c-done">DONE</span>
+      </div>
+      <table>
+        <tr><th>🗓️ 日期</th><th>💼 工作和进展</th></tr>
+        <tr><td class="rh">10-07</td><td>和 <span class="lk">张三</span> 确认了对齐方式</td></tr>
+        <tr><td class="rh">10-06</td><td>补全 <span class="lk">示例项目</span> 的关键决策</td></tr>
+      </table>
+      <div class="btnrow">
+        <button class="p">保存到浏览器</button>
+        <button class="gh">下载 .md</button>
+      </div>
+      <div class="heat">
+        <div class="cell" style="background:#efe8f1"></div>
+        <div class="cell" style="background:#d5c8da"></div>
+        <div class="cell" style="background:#b8a3c0"></div>
+        <div class="cell" style="background:#93789e"></div>
+        <div class="cell" style="background:#6d5477"></div>
+        <span>热力图</span>
+      </div>
+      <div class="hex">
+        底 <b>#f8f7f9</b>　描边 <b>#e2dee6</b>　主色 <b>#9b7f9e</b><br>
+        深 <b>#75587b</b>　淡底 <b>#efe8f1</b>　文字 <b>#35313a</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 梅子灰 -->
+  <div class="card" style="
+      --bg:#f9f6f8; --line:#e6d9e2; --text:#372f36; --muted:#877a83;
+      --accent:#9c5570; --soft:#f2e3ea; --head:#f6ecf1; --headtext:#6b4a58; --rh:#fbf6f9;
+      --todo:#836f45; --doing:#8d4a63; --done:#4a7a5c;">
+    <div class="name"><b>梅子灰</b>
+      <small>Plum · 偏酒红，最有质感、最"贵"</small></div>
+    <div class="mock">
+      <div class="h">📔 2026-10-07</div>
+      <div class="meta">journals/2026_10_07.md</div>
+      <div class="chips">
+        <span class="chip c-todo">TODO</span>
+        <span class="chip c-doing">DOING</span>
+        <span class="chip c-done">DONE</span>
+      </div>
+      <table>
+        <tr><th>🗓️ 日期</th><th>💼 工作和进展</th></tr>
+        <tr><td class="rh">10-07</td><td>和 <span class="lk">张三</span> 确认了对齐方式</td></tr>
+        <tr><td class="rh">10-06</td><td>补全 <span class="lk">示例项目</span> 的关键决策</td></tr>
+      </table>
+      <div class="btnrow">
+        <button class="p">保存到浏览器</button>
+        <button class="gh">下载 .md</button>
+      </div>
+      <div class="heat">
+        <div class="cell" style="background:#f2e3ea"></div>
+        <div class="cell" style="background:#ddbfcd"></div>
+        <div class="cell" style="background:#c394a9"></div>
+        <div class="cell" style="background:#a06b82"></div>
+        <div class="cell" style="background:#7a3a52"></div>
+        <span>热力图</span>
+      </div>
+      <div class="hex">
+        底 <b>#f9f6f8</b>　描边 <b>#e6d9e2</b>　主色 <b>#9c5570</b><br>
+        深 <b>#7a3a52</b>　淡底 <b>#f2e3ea</b>　文字 <b>#372f36</b>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sub" style="margin-top:26px">
+  说明：这四套都是「低饱和 + 压暗 + 暖色文字」，共同点是<b>不用高饱和糖果粉</b>。
+  差别主要在冷暖 ——
+  豆沙粉偏橘偏暖，灰玫瑰偏紫偏冷，梅子灰最深最重，干玫瑰居中（也就是你现在看到的）。
+</div>
+
+</body>
+</html>

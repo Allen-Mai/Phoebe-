@@ -1,0 +1,22 @@
+# Logseq 运行时目录（本机缓存/回收站，不参与同步）
+logseq/bak/
+logseq/.recycle/
+logseq/version-files/
+logseq/.recycle/*
+logseq/bak/*
+
+# 编辑器/系统杂物
+.obsidian/
+.vscode/
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.tmp
+*.swp
+*~
+
+# 统计脚本产出（报告可以不入库，避免仓库被 HTML 撑大）
+/报告/
+
+# 备份产物
+/备份/

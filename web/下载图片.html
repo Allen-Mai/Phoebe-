@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>保存三丽鸥立绘 · 手动版</title>
+<style>
+  :root{
+    --bg:#fbf6f9; --panel:#fff; --line:#f0dbe4; --text:#332b30; --muted:#8b7b84;
+    --accent:#d95b82; --accent-deep:#a83459;
+  }
+  body{
+    margin:0;padding:26px 22px 40px;color:var(--text);
+    background-color:var(--bg);
+    background-image:linear-gradient(168deg,#fdf8fb 0%,#fbf3f8 46%,#f9f0f6 100%);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:14px;line-height:1.7;
+  }
+  h1{font-size:21px;margin:0 0 6px;color:var(--accent-deep)}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .steps{
+    background:linear-gradient(135deg,#fdeaf3,#f9e6f1);
+    border:1px solid var(--line);border-radius:11px;padding:14px 18px;margin-bottom:22px;
+    font-size:13.5px;line-height:1.9;
+  }
+  .steps b{color:var(--accent-deep)}
+  .steps code{background:#fff;border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-family:Consolas,monospace;font-size:12.5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    box-shadow:0 1px 2px rgba(60,35,45,.05);display:flex;flex-direction:column;
+  }
+  .pic{aspect-ratio:1/1;background:linear-gradient(160deg,#fff8fb,#fdeaf3);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+  .pic img{width:100%;height:100%;object-fit:contain;padding:14px;display:block}
+  .pic .fail{display:none;text-align:center;color:var(--muted);font-size:12px;padding:16px}
+  .body{padding:11px 14px 14px;border-top:2px solid var(--fam,#d95b82)}
+  .nm{font-weight:700;font-size:14.5px}
+  .nm small{font-weight:400;font-size:11px;color:var(--muted);margin-left:6px}
+  .fname{
+    display:flex;align-items:center;gap:8px;margin-top:9px;
+    background:#fdf6f9;border:1px solid var(--line);border-radius:8px;padding:6px 9px;
+  }
+  .fname span{font-family:Consolas,monospace;font-size:12.5px;flex:1;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  button{font:inherit;font-size:11.5px;padding:3px 10px;border-radius:7px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--text)}
+  button:hover{background:#fdeaf3}
+  button.done{background:#eaf4ee;border-color:#cfe6d8;color:#3f7a58}
+  .foot{margin-top:24px;font-size:12.5px;color:var(--muted);line-height:1.9}
+</style>
+</head>
+<body>
+
+<h1>🎀 保存三丽鸥立绘（手动版）</h1>
+<div class="sub">如果 PowerShell 脚本跑不通，用这一页手动存。8 张，大约 1 分钟。</div>
+
+<div class="steps">
+  <b>步骤：</b><br>
+  1. 在任意一张图上<b>右键 → 「图片另存为」</b><br>
+  2. 把文件名改成卡片下方显示的名字（点「复制文件名」按钮，再在保存对话框里粘贴）<br>
+  3. 保存位置选 <code>日记本项目\web\img\</code><br>
+  4. 8 张都存完后，回到 <code>index.html</code> 按 <code>Ctrl+F5</code> 强制刷新<br>
+  <br>
+  <b>提示：</b>这一页需要联网才能显示图片。如果图片显示不出来，说明访问官网有问题，
+  可以直接在浏览器打开每张卡片下方的原始链接。
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="foot">
+  这些是三丽鸥的版权素材，建议只放在你本地个人使用。<br>
+  浏览器出于安全限制，网页本身无法自动把图片写进你的磁盘 —— 所以最后这一步必须你点一下「另存为」。
+</div>
+
+<script>
+const ROSTER = [
+  { id:1, name:'凯蒂猫',  en:'Hello Kitty',    color:'#e8384f' },
+  { id:2, name:'酷洛米',  en:'Kuromi',         color:'#8b5fa8' },
+  { id:3, name:'美乐蒂',  en:'My Melody',      color:'#f7a8c4' },
+  { id:4, name:'大耳狗',  en:'Cinnamoroll',    color:'#8fd0ea' },
+  { id:5, name:'酷企鹅',  en:'Badtz-Maru',     color:'#5b5b6e' },
+  { id:6, name:'布丁狗',  en:'Pompompurin',    color:'#f0c96b' },
+  { id:7, name:'帕恰狗',  en:'Pochacco',       color:'#8fbf6a' },
+  { id:8, name:'毛毯熊',  en:'Marumofubiyori', color:'#b9a8e8' }
+];
+
+const BASE = 'https://sanrio.com.cn/images/family';
+const grid = document.getElementById('grid');
+
+ROSTER.forEach(function(r){
+  const fname = 'family-' + r.id + '.png';
+  const url = BASE + '/' + r.id + '/d1.png';
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML =
+      '<div class="pic" style="--fam:' + r.color + '">'
+    +   '<img src="' + url + '" alt="' + r.name + '" referrerpolicy="no-referrer">'
+    +   '<div class="fail">图片加载失败<br>可能是网络问题<br><br>'
+    +     '<a href="' + url + '" target="_blank" rel="noreferrer">在新窗口打开原图</a></div>'
+    + '</div>'
+    + '<div class="body" style="--fam:' + r.color + '">'
+    +   '<div class="nm">' + r.name + '<small>' + r.en + '</small></div>'
+    +   '<div class="fname"><span>' + fname + '</span>'
+    +     '<button data-name="' + fname + '">复制文件名</button></div>'
+    + '</div>';
+  grid.appendChild(card);
+
+  const img = card.querySelector('img');
+  img.addEventListener('error', function(){
+    img.style.display = 'none';
+    card.querySelector('.fail').style.display = 'block';
+  });
+});
+
+grid.addEventListener('click', function(e){
+  const btn = e.target.closest('button[data-name]');
+  if (!btn) return;
+  const name = btn.dataset.name;
+  const done = function(){
+    btn.textContent = '已复制';
+    btn.classList.add('done');
+    setTimeout(function(){ btn.textContent = '复制文件名'; btn.classList.remove('done'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(name).then(done, function(){ fallback(name, done); });
+  } else {
+    fallback(name, done);
+  }
+});
+
+function fallback(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { alert('请手动复制：' + text); }
+  ta.remove();
+}
+</script>
+</body>
+</html>

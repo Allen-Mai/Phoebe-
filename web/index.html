@@ -1,0 +1,4364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日记本 + 工作手册 · 网页测试版</title>
+<style>
+  :root{
+    color-scheme: light;
+    /* ---- 三丽鸥粉：保留渐变与阴影的高级结构，色相回到三丽鸥 ---- */
+    --bg:#fbf6f9;
+    --panel:#ffffff;
+    --line:#f0dbe4;
+    --line-soft:#f8ebf1;
+    --text:#332b30;
+    --muted:#8b7b84;
+    --accent:#d95b82;
+    --accent-deep:#a83459;
+    --accent-soft:#fce4ee;
+    --hover:#fdf0f5;
+    --done:#3f7a58;
+    --todo:#96762f;
+    --doing:#c9456b;
+
+    /* 三丽鸥角色色 */
+    --bow:#e8384f;      /* Hello Kitty 蝴蝶结红 */
+    --melody:#f7a8c4;   /* 美乐蒂 粉 */
+    --kuromi:#8b5fa8;   /* 库洛米 紫 */
+    --cinnamo:#8fd0ea;  /* 大耳狗 蓝 */
+    --purin:#f0c96b;    /* 布丁狗 奶油黄 */
+    --stars:#b9a8e8;    /* 双子星 淡紫 */
+
+    /* 渐变 */
+    --grad-accent:linear-gradient(135deg,#ee8fb0 0%,#d95b82 46%,#a83459 100%);
+    --grad-accent-hover:linear-gradient(135deg,#e07ba0 0%,#c1456e 55%,#8f2749 100%);
+    --grad-panel:linear-gradient(180deg,#ffffff 0%,#fffafc 100%);
+    --grad-soft:linear-gradient(135deg,#fdeaf3 0%,#f9e6f1 100%);
+    --grad-head:linear-gradient(180deg,#fdeff5 0%,#f9e0ea 100%);
+    --grad-aside:linear-gradient(180deg,#fffdfe 0%,#fdf5f9 100%);
+
+    /* 阴影 */
+    --shadow-xs:0 1px 2px rgba(60,35,45,.05);
+    --shadow:0 1px 2px rgba(60,35,45,.05), 0 12px 32px -16px rgba(168,52,89,.28);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--text);
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(1200px 620px at 8% -14%, #ffeaf4 0%, rgba(255,234,244,0) 58%),
+      radial-gradient(1000px 540px at 94% -6%, #f7e9f6 0%, rgba(247,233,246,0) 56%),
+      linear-gradient(168deg,#fdf8fb 0%,#fbf3f8 46%,#f9f0f6 100%);
+    background-attachment:fixed;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:15px;line-height:1.7;
+    display:flex;flex-direction:column;height:100%;
+  }
+  /* ---------- 顶部说明条 ---------- */
+  #banner{
+    background-image:linear-gradient(100deg,#fde4ef 0%,#fbeef7 52%,#f3ebfa 100%);
+    background-color:#fceaf3;
+    border-bottom:1px solid #f3cfdf;
+    box-shadow:0 1px 0 rgba(255,255,255,.75) inset;
+    padding:8px 16px;font-size:13px;color:#6f4a58;display:flex;
+    gap:14px;align-items:center;flex-wrap:wrap;
+  }
+  /* 三丽鸥蝴蝶结 */
+  #banner .bow{flex:0 0 auto;width:32px;height:21px;
+    background-repeat:no-repeat;background-position:center;background-size:contain;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 28'%3E%3Cellipse cx='11' cy='14' rx='10' ry='7.5' transform='rotate(-14 11 14)' fill='%23e8384f'/%3E%3Cellipse cx='33' cy='14' rx='10' ry='7.5' transform='rotate(14 33 14)' fill='%23e8384f'/%3E%3Ccircle cx='22' cy='14' r='4.2' fill='%23c22b40'/%3E%3C/svg%3E")}
+  #banner b{color:var(--accent-deep)}
+  .banner-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+  /* ---------- 布局 ---------- */
+  #app{flex:1;min-height:0;display:grid;grid-template-columns:230px minmax(0,1fr) 290px}
+  aside{overflow-y:auto;background-color:#fff;background-image:var(--grad-aside);padding:14px}
+  #nav{border-right:1px solid var(--line)}
+  #context{border-left:1px solid var(--line)}
+  main{overflow-y:auto;padding:26px 34px}
+  @media (max-width:1100px){
+    #app{grid-template-columns:200px minmax(0,1fr)}
+    #context{display:none}
+  }
+  @media (max-width:760px){
+    #app{grid-template-columns:1fr;height:auto}
+    #nav{border-right:none;border-bottom:1px solid var(--line);max-height:220px}
+    main{padding:18px}
+  }
+  /* ---------- 导航 ---------- */
+  .nav-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);
+    text-transform:uppercase;margin:16px 0 6px}
+  .nav-title:first-child{margin-top:0}
+  .nav-hint{font-weight:400;font-size:10.5px;letter-spacing:0;text-transform:none;
+    opacity:.7;margin-left:6px}
+  .nav-del{color:var(--muted);font-style:italic}
+  .nav-del:hover{color:var(--accent-deep);background-color:#fdf0f4}
+  .nav-del small{font-size:10.5px;opacity:.7;margin-left:5px}
+  .danger{color:var(--bow);border-color:#f2cdd9}
+  .danger:hover{background-color:#fdf0f4;border-color:var(--bow)}
+  .nav-item{display:block;padding:5px 9px;border-radius:7px;cursor:pointer;
+    color:var(--text);text-decoration:none;font-size:14px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav-item:hover{background-color:var(--hover)}
+  .nav-item.active{background-image:linear-gradient(90deg,#fde4ef 0%,#fbeef7 100%);
+    background-color:#fceaf3;color:var(--accent-deep);font-weight:600;
+    box-shadow:inset 2px 0 0 var(--accent)}
+  .dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+    background-image:var(--grad-accent);margin-left:6px;vertical-align:middle}
+  /* ---------- 正文 ---------- */
+  h1{font-size:26px;margin:0 0 4px;border-bottom:1px solid var(--line);
+    padding-bottom:11px;letter-spacing:-.01em}
+  @supports ((-webkit-background-clip:text) or (background-clip:text)){
+    h1{background-image:linear-gradient(100deg,#a83459 0%,#d95b82 44%,#a07fc4 100%);
+      -webkit-background-clip:text;background-clip:text;color:transparent}
+  }
+  .meta{color:var(--muted);font-size:13px;margin-bottom:20px;display:flex;
+    gap:10px;align-items:center;flex-wrap:wrap}
+  .props{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+  .prop{background-image:var(--grad-soft);background-color:var(--hover);
+    border:1px solid var(--line-soft);border-radius:999px;
+    padding:2px 12px;font-size:12.5px;color:var(--muted)}
+  .prop b{color:var(--text);font-weight:600}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:3px 0}
+  h2{font-size:19px;margin:20px 0 6px}
+  /* 阅读页（原文）：每个 ## 小节一张卡片 */
+  .doc-card{background-image:var(--grad-panel);background-color:#fff;
+    border:1px solid var(--line);border-radius:12px;
+    padding:14px 18px 16px;margin:0 0 14px;box-shadow:var(--shadow-xs)}
+  .doc-card > h1:first-child,
+  .doc-card > h2:first-child{margin-top:0}
+  .doc-card > h2{font-size:16px;margin:0 0 9px;padding-bottom:7px;
+    border-bottom:1px solid var(--line-soft);color:var(--accent-deep)}
+  .doc-card > h1{font-size:19px;margin:0 0 9px;padding-bottom:7px;
+    border-bottom:1px solid var(--line-soft)}
+  /* 三级标题的卡片稍微缩进，保留"它属于上一个二级小节"的层级感 */
+  .doc-card.lv3{margin-left:18px}
+  .doc-card > h3{font-size:14.5px;font-weight:600;margin:0 0 7px;padding-bottom:6px;
+    border-bottom:1px dashed var(--line-soft);color:var(--muted)}
+  .doc-card > ul:last-child,
+  .doc-card > p:last-child{margin-bottom:0}
+  .doc-card > p:first-child,
+  .doc-card > ul:first-child{margin-top:0}
+  /* ① 框的序号：中文一、二、三…… */
+  .card-no{font-weight:700;margin-right:1px}
+  .card-no-row{font-size:15px;font-weight:700;color:var(--accent-deep);
+    margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line-soft)}
+  /* ② 框内条目：最外层用 1. 2. 3. 编号，子项仍是圆点 */
+  .doc-card{counter-reset:item}
+  .doc-card > ul > li{counter-increment:item;list-style:none;position:relative;
+    padding-left:1.8em}
+  .doc-card > ul > li::before{content:counter(item) ".";position:absolute;left:.15em;
+    color:var(--muted);font-family:Consolas,Menlo,monospace;font-size:12px;
+    font-variant-numeric:tabular-nums}
+  h3{font-size:16.5px;margin:16px 0 5px}
+  h4,h5,h6{font-size:15px;margin:14px 0 4px}
+  code{background-color:var(--hover);border:1px solid var(--line-soft);
+    padding:1px 6px;border-radius:6px;
+    font-family:Consolas,"Courier New",monospace;font-size:13px}
+  pre{background-image:var(--grad-panel);background-color:#fff;border:1px solid var(--line);
+    border-radius:10px;padding:12px;overflow-x:auto;box-shadow:var(--shadow-xs)}
+  pre code{background:none;border:none;padding:0}
+  hr{border:none;border-top:1px solid var(--line);margin:22px 0}
+  img{max-width:100%;border-radius:10px}
+  blockquote{margin:8px 0;padding:2px 14px;border-left:2px solid var(--accent-soft);color:var(--muted)}
+  a{color:var(--accent)}
+  .wikilink{cursor:pointer;text-decoration:none;border-bottom:1px solid rgba(168,85,109,.4)}
+  .wikilink.missing{color:var(--bow);border-bottom-style:dashed}
+  .tag{cursor:pointer;text-decoration:none;
+    background-image:linear-gradient(180deg,#fdeaf3,#f8dbe8);background-color:#fce4ee;
+    border:1px solid #f6cbdd;color:var(--accent-deep);
+    border-radius:999px;padding:1px 10px;font-size:13px}
+  .tag.missing{background-image:none;background-color:#fbe0e6;border-color:#f2c4d0;color:var(--bow)}
+  /* 任务徽章 */
+  .task{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;
+    padding:1px 8px;margin-right:7px;vertical-align:1px;letter-spacing:.03em}
+  .task.TODO{background-color:#fdf4de;border:1px solid #f0e0b8;color:var(--todo)}
+  .task.DOING{background-color:#fce4ee;border:1px solid #f4c9da;color:var(--doing)}
+  .task.DONE{background-color:#eaf4ee;border:1px solid #cfe6d8;color:var(--done);text-decoration:none}
+  /* DONE 只用绿色徽章 + 淡色区分，不加删除线 ——
+     划掉之后看起来像"这条不算数"，但做完的事正是要留着回顾的 */
+  li.is-done{color:var(--muted)}
+  /* 查询块 */
+  .query{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;
+    background-image:var(--grad-panel);background-color:#fff;box-shadow:var(--shadow-xs)}
+  .query .q-head{font-size:12px;color:var(--muted);margin-bottom:6px;
+    font-family:Consolas,monospace;word-break:break-all}
+  .query .q-empty{color:var(--muted);font-size:13.5px;font-style:italic}
+  .query .q-file{font-size:12px;color:var(--muted);margin-top:8px}
+  .query ul{margin:4px 0}
+  /* ---------- 右侧上下文 ---------- */
+  .panel-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;
+    text-transform:uppercase;margin:0 0 8px}
+  .ctx-item{display:block;padding:5px 9px;border-radius:7px;cursor:pointer;
+    font-size:13.5px;text-decoration:none;color:var(--text)}
+  .ctx-item:hover{background-color:var(--hover)}
+  .ctx-item small{color:var(--muted);display:block;font-size:12px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .empty{color:var(--muted);font-size:13px;font-style:italic}
+  /* 右侧栏通用块 */
+  .side-block{margin-bottom:22px}
+  .side-stat{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+    font-size:12.5px;color:var(--muted);padding:2px 0}
+  .side-stat b{color:var(--text);font-weight:600;white-space:nowrap}
+  .side-big{font-size:19px;font-weight:700;color:var(--accent-deep);
+    line-height:1.35;margin:2px 0 7px}
+  .side-bar{height:5px;border-radius:3px;background-color:var(--line-soft);
+    margin:1px 0 8px;overflow:hidden}
+  .side-bar i{display:block;height:5px;border-radius:3px;
+    background-image:var(--grad-accent)}
+  .side-url{font-family:Consolas,Menlo,monospace;font-size:11px;color:var(--text);
+    word-break:break-all;line-height:1.65;margin-top:3px}
+  /* ---------- 按钮 ---------- */
+  button{font:inherit;font-size:13px;padding:5px 13px;border:1px solid var(--line);
+    background-image:linear-gradient(180deg,#ffffff 0%,#fbf6f9 100%);background-color:#fff;
+    border-radius:8px;cursor:pointer;color:var(--text);box-shadow:var(--shadow-xs)}
+  button:hover{background-image:linear-gradient(180deg,#ffffff 0%,#f7eef3 100%)}
+  button.primary{background-image:var(--grad-accent);background-color:var(--accent);
+    border-color:#8f4258;color:#fff;
+    box-shadow:0 1px 2px rgba(125,52,80,.3), 0 10px 22px -12px rgba(125,52,80,.65)}
+  button.primary:hover{background-image:var(--grad-accent-hover)}
+  /* ---------- 编辑器 ---------- */
+  #editor{width:100%;min-height:60vh;font-family:Consolas,"Courier New",monospace;
+    font-size:13.5px;line-height:1.65;padding:14px;border:1px solid var(--line);
+    border-radius:10px;resize:vertical;background-color:#fff;
+    box-shadow:inset 0 1px 2px rgba(60,35,45,.04)}
+  .edit-bar{display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap}
+  /* ---------- 编辑页：上=AI 只读区，下=原文可写区 ---------- */
+  .zone{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;
+    overflow:hidden;background-color:#fff}
+  .zone-ro{background-image:linear-gradient(180deg,#fbf7ff 0%,#ffffff 60%)}
+  .zone-head{padding:8px 14px;font-size:12.5px;font-weight:700;
+    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    border-bottom:1px solid var(--line-soft)}
+  .zone-head span{font-weight:400;font-size:11.5px;color:var(--muted)}
+  .zone-ro   .zone-head{background-color:#f6f0fd;color:#6b4f9e}
+  .zone-edit .zone-head{background-color:#fdf2f7;color:var(--accent-deep)}
+  .zone-body{padding:12px 14px}
+  .zone-body .doc-card{margin-bottom:10px;box-shadow:none;padding:10px 14px 12px}
+  .zone-body .doc-card:last-child{margin-bottom:0}
+  .zone-empty{padding:18px 14px;color:var(--muted);font-size:13px;font-style:italic}
+  .zone-edit #editor{border:0;border-radius:0;box-shadow:none;
+    min-height:42vh;margin:0;display:block;width:100%}
+  .zone-note{color:var(--muted);font-size:12.5px;line-height:1.8}
+  /* ---------- 写日记时的加油小伙伴（编辑页右上角）---------- */
+  .cheer{position:fixed;top:16px;right:310px;z-index:60;width:150px;
+    display:flex;flex-direction:column;align-items:flex-end;gap:7px;
+    pointer-events:none;user-select:none;-webkit-user-select:none}
+  .cheer-bubble{max-width:190px;text-align:right;
+    background-image:linear-gradient(180deg,#ffffff,#fdf1f7);background-color:#fff;
+    border:1px solid #f6cbdd;border-radius:12px;padding:7px 11px;
+    font-size:12px;line-height:1.65;color:var(--accent-deep);
+    box-shadow:var(--shadow-xs);animation:cheerPop .45s ease both}
+  .cheer-img{width:110px;height:auto;display:block;
+    animation:cheerBounce 1.9s ease-in-out infinite;
+    filter:drop-shadow(0 7px 11px rgba(120,30,60,.18))}
+  @keyframes cheerBounce{
+    0%,100%{transform:translateY(0) rotate(-3deg)}
+    50%    {transform:translateY(-10px) rotate(3deg)}
+  }
+  @keyframes cheerPop{
+    from{transform:scale(.82) translateY(4px);opacity:0}
+    to  {transform:scale(1) translateY(0);opacity:1}
+  }
+  @media (max-width:1100px){ .cheer{right:20px} }
+  @media (prefers-reduced-motion:reduce){
+    .cheer-img,.cheer-bubble{animation:none}
+  }
+  /* ---------- 搜索 ---------- */
+  .hit{border-bottom:1px solid var(--line-soft);padding:12px 0}
+  .hit:last-child{border-bottom:none}
+  .hit a{font-weight:600;text-decoration:none;cursor:pointer}
+  .hit .line{font-family:Consolas,monospace;font-size:13px;color:var(--muted);
+    margin-top:4px;word-break:break-all}
+  .hit .line em{background-image:linear-gradient(180deg,#fbd2e2,#f5bfd4);
+    font-style:normal;color:var(--text);border-radius:3px;padding:0 2px}
+  #searchBox{width:100%;padding:9px 14px;font:inherit;border:1px solid var(--line);
+    border-radius:8px;margin-bottom:16px;background-color:#fdfbfc;color:var(--text);
+    box-shadow:inset 0 1px 2px rgba(60,35,45,.04)}
+  #searchBox:focus{outline:none;border-color:var(--accent);background-color:#fff;
+    box-shadow:0 0 0 3px rgba(168,85,109,.12)}
+  /* ---------- 热力图 ---------- */
+  .cards{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0 26px}
+  .card{background-image:var(--grad-panel);background-color:#fff;
+    border:1px solid var(--line);border-radius:11px;
+    padding:13px 17px;min-width:130px;box-shadow:var(--shadow-xs)}
+  .card .k{font-size:12px;color:var(--muted)}
+  .card .v{font-size:23px;font-weight:600;margin-top:3px;color:var(--accent-deep)}
+  /* 三丽鸥角色色：统计卡片各一个角色色 */
+  .cards .card:nth-child(1){border-top:2px solid var(--melody)}
+  .cards .card:nth-child(2){border-top:2px solid var(--cinnamo)}
+  .cards .card:nth-child(3){border-top:2px solid var(--purin)}
+  .cards .card:nth-child(4){border-top:2px solid var(--kuromi)}
+  .cards .card:nth-child(5){border-top:2px solid var(--stars)}
+  .cards .card:nth-child(6){border-top:2px solid var(--accent)}
+  .heat{background-image:var(--grad-panel);background-color:#fff;
+    border:1px solid var(--line);border-radius:11px;
+    padding:16px;overflow-x:auto;box-shadow:var(--shadow-xs)}
+  .heat-grid{display:grid;grid-template-rows:repeat(7,12px);
+    grid-auto-flow:column;grid-auto-columns:12px;gap:3px}
+  .cell{width:12px;height:12px;border-radius:2.5px;background-color:#fbe6ef}
+  .cell.empty{background-color:transparent}
+  .lv0{background-color:#fbe6ef}.lv1{background-color:#f6c6d9}.lv2{background-color:#ec9cba}
+  .lv3{background-color:#d95b82}.lv4{background-color:#a83459}
+  .legend{display:flex;align-items:center;gap:5px;margin-top:13px;
+    font-size:12px;color:var(--muted)}
+  .missing-days{font-family:Consolas,monospace;font-size:12.5px;color:var(--muted);line-height:2}
+  /* ---------- 表格视图 ---------- */
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:11px;
+    background-color:#fff;max-width:100%;box-shadow:var(--shadow)}
+  table.grid-table{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
+  table.grid-table th,table.grid-table td{
+    border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
+    padding:8px 11px;vertical-align:top;text-align:left}
+  table.grid-table th:last-child,table.grid-table td:last-child{border-right:none}
+  table.grid-table thead th{
+    position:sticky;top:0;background-image:var(--grad-head);background-color:#fce9f2;
+    font-size:12.5px;font-weight:700;letter-spacing:.02em;
+    color:#77495c;white-space:nowrap;z-index:2;
+    border-bottom:1px solid #f0d2e0}
+  table.grid-table td.rowhead,table.grid-table th.corner{
+    background-image:linear-gradient(90deg,#fffafc 0%,#fceff5 100%);background-color:#fdf6f9;
+    font-weight:600;white-space:nowrap;
+    position:sticky;left:0;z-index:1;min-width:96px}
+  table.grid-table thead th.corner{z-index:3}
+  table.grid-table tbody tr:hover td{background-color:#fef5f9}
+  table.grid-table tbody tr:hover td.rowhead{
+    background-image:linear-gradient(90deg,#fce4ef 0%,#f8dbe8 100%)}
+  table.grid-table td{min-width:190px;max-width:420px}
+  .cell-list{margin:0;padding-left:16px}
+  .cell-list>li{margin:2px 0}
+  .cell-list ul{padding-left:15px;margin:2px 0}
+  .cell-list ul li{color:var(--muted);font-size:12.5px}
+  .cell-empty{color:#ddd0d6}
+  .q-src{color:var(--muted);font-size:11.5px}
+  .cell-list li.cell-query{list-style:none;margin-left:-14px}
+  .tabs{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap;align-items:center}
+  .tab{padding:5px 14px;border:1px solid var(--line);border-radius:8px;
+    background-image:linear-gradient(180deg,#ffffff,#fbf6f9);background-color:#fff;
+    cursor:pointer;font-size:13px;user-select:none;box-shadow:var(--shadow-xs)}
+  .tab:hover{background-image:linear-gradient(180deg,#ffffff,#f7eef3)}
+  .tab.active{background-image:linear-gradient(180deg,#fdeaf3,#f8dbe8);background-color:#fce4ee;
+    border-color:#f4c8db;color:var(--accent-deep);font-weight:600}
+  .tabs .spacer{flex:1}
+  .preamble{background-image:var(--grad-panel);background-color:#fff;
+    border:1px solid var(--line);border-radius:11px;
+    padding:10px 16px;margin-bottom:14px;box-shadow:var(--shadow-xs)}
+  /* ---------- 日历 ---------- */
+  .cal-head{display:flex;align-items:center;gap:10px;margin:0 0 16px;flex-wrap:wrap}
+  .cal-title{font-size:17px;font-weight:700;color:var(--accent-deep);min-width:124px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;
+    background-image:var(--grad-panel);background-color:#fff;
+    border:1px solid var(--line);border-radius:12px;padding:14px;
+    box-shadow:var(--shadow-xs)}
+  .cal-dow{font-size:11.5px;font-weight:700;color:var(--muted);text-align:center;
+    letter-spacing:.06em;padding-bottom:2px}
+  .cal-dow.wk{color:var(--accent)}
+  .cal-cell{position:relative;min-height:84px;border:1px solid var(--line-soft);
+    border-radius:9px;padding:7px 8px;cursor:pointer;background-color:#fffdfe;
+    display:flex;flex-direction:column;gap:3px;
+    transition:border-color .12s ease, box-shadow .12s ease}
+  .cal-cell:hover{border-color:var(--accent);
+    box-shadow:0 3px 12px -5px rgba(168,52,89,.45)}
+  .cal-cell.out{opacity:.35}
+  .cal-cell.has{background-image:linear-gradient(180deg,#ffffff 0%,#fdf2f7 100%)}
+  .cal-cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .cal-day{font-size:13.5px;font-weight:600;line-height:1.2}
+  .cal-cell.today .cal-day{color:var(--accent-deep)}
+  .cal-meta{font-size:10.5px;color:var(--muted);font-family:Consolas,monospace}
+  .cal-prev{font-size:10.5px;color:var(--muted);line-height:1.5;overflow:hidden;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+  .cal-dot{position:absolute;top:9px;right:9px;width:6px;height:6px;border-radius:50%;
+    background-image:var(--grad-accent)}
+  /* 未来日期：锁死，不能写 */
+  .cal-cell.future{opacity:.45;cursor:not-allowed;background-color:#fbfafb;
+    border-style:dashed}
+  .cal-cell.future:hover{border-color:var(--line-soft);box-shadow:none}
+  .cal-cell.future .cal-day{color:var(--muted);font-weight:500}
+  .cal-msg{min-height:19px;font-size:12.5px;color:var(--bow);margin:-4px 0 12px}
+  .cal-msg:empty{min-height:0;margin-bottom:8px}
+  @media (max-width:900px){
+    .cal-grid{gap:5px;padding:9px}
+    .cal-cell{min-height:62px;padding:5px 6px}
+    .cal-prev{display:none}
+  }
+  /* ---------- AI 整理 ---------- */
+  .ai-panel{background-image:var(--grad-panel);background-color:#fff;
+    border:1px solid var(--line);border-radius:11px;padding:13px 16px;
+    margin-bottom:12px;box-shadow:var(--shadow-xs)}
+  .ai-panel h4{margin:0 0 9px;font-size:13.5px;color:var(--accent-deep)}
+  .ai-out{width:100%;min-height:170px;font-family:Consolas,"Courier New",monospace;
+    font-size:13px;line-height:1.75;padding:11px;border:1px solid var(--line);
+    border-radius:9px;background-color:#fdfbfc;color:var(--text);resize:vertical}
+  .ai-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .ai-msg{font-size:12.5px;color:var(--muted);line-height:1.75;
+    margin-top:8px;white-space:pre-wrap}
+  .ai-msg.err{color:var(--bow)}
+  /* 右下角提示条 */
+  .toast{position:fixed;right:22px;bottom:22px;z-index:90;max-width:330px;
+    padding:11px 16px;border-radius:12px;font-size:13px;line-height:1.65;
+    background-color:var(--accent-deep);color:#fff;white-space:pre-wrap;
+    box-shadow:0 10px 30px -10px rgba(120,30,60,.55);
+    opacity:0;transform:translateY(10px);pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease}
+  .toast.on{opacity:1;transform:translateY(0)}
+  .toast.ok{background-color:#2f7d5b}
+  .toast.err{background-color:#9b2340}
+  .ai-field{display:flex;gap:9px;align-items:center;margin:8px 0;flex-wrap:wrap}
+  .ai-field label{font-size:12.5px;color:var(--muted);width:84px;flex:0 0 auto}
+  .ai-field input{flex:1;min-width:220px;padding:6px 11px;font:inherit;font-size:12.5px;
+    border:1px solid var(--line);border-radius:8px;background-color:#fff;color:var(--text)}
+  .ai-field input:focus{outline:none;border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(168,85,109,.12)}
+  /* ---------- 三丽鸥家族（每个页面右上角，随机显示一位） ---------- */
+  /* 无边框、无底色、无圆角裁切、无内边距 —— 立绘直接最大化显示 */
+  .fam-corner{margin:0;max-width:100%}
+  .fc-solo{display:flex;gap:18px;align-items:flex-start}
+  .fc-av{position:relative;display:inline-block;flex:0 0 auto;overflow:hidden;
+    width:clamp(100px,11vw,170px);line-height:0}
+  /* 不裁切、不限制形状：图片按自身比例完整显示 */
+  .fc-av img{width:100%;height:auto;display:block}
+  .fc-ph{display:flex;align-items:center;justify-content:center;
+    width:100%;aspect-ratio:1/1;font-size:clamp(35px,4.5vw,66px);line-height:1}
+  .fc-tx{display:flex;flex-direction:column;min-width:0;
+    padding-top:clamp(6px,1.4vw,20px)}
+  .fc-tx b{font-size:17px;line-height:1.45}
+  .fc-tx b small{font-weight:400;font-size:11.5px;color:var(--muted);
+    letter-spacing:.02em;margin-left:7px}
+  .fc-desc{font-size:13px;color:var(--muted);line-height:1.85;margin-top:7px}
+  /* 名言：中文正文色、英文斜体淡色、出处最小。默认各截 3 行，点一下展开 */
+  .fc-body{display:block;cursor:pointer}
+  .fc-row{display:flex;gap:6px;align-items:flex-start}
+  .fc-row > .fc-quote,.fc-row > .fc-en{flex:1 1 auto;min-width:0}
+  .fc-body .fc-quote,.fc-body .fc-en{display:-webkit-box;-webkit-box-orient:vertical;
+    overflow:hidden}
+  .fc-body .fc-quote{-webkit-line-clamp:3}
+  .fc-body.on .fc-quote,.fc-body.on .fc-en{display:block;overflow:visible}
+  /* 🔊 小喇叭：中英各一个 */
+  .fc-spk{flex:0 0 auto;cursor:pointer;font-size:12px;line-height:1.75;
+    opacity:.5;user-select:none;-webkit-user-select:none;
+    transition:opacity .15s ease, transform .15s ease}
+  .fc-spk:hover{opacity:1;transform:scale(1.2)}
+  .fc-spk.speaking{opacity:1;animation:spkPulse .9s ease-in-out infinite}
+  .fc-spk.unsupported{opacity:.25;cursor:not-allowed}
+  @keyframes spkPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+  .fc-desc.fc-quote{font-size:13.5px;color:var(--text);line-height:1.9}
+  .fc-en{font-size:12px;color:var(--muted);line-height:1.75;margin-top:5px;
+    font-family:Georgia,"Times New Roman",serif;font-style:italic;
+    -webkit-line-clamp:3}
+  .fc-from{font-size:11.5px;color:var(--muted);margin-top:5px;letter-spacing:.02em}
+  .fc-roll{align-self:flex-start;margin-top:11px;cursor:pointer;user-select:none;
+    font-size:12px;color:var(--accent-deep);
+    background-image:linear-gradient(180deg,#fdeaf3,#f8dbe8);background-color:#fce4ee;
+    border:1px solid #f6cbdd;border-radius:999px;padding:3px 13px}
+  .fc-roll:hover{background-image:linear-gradient(180deg,#fce0ee,#f6cfe0)}
+  @media (max-width:900px){
+    .fc-solo{gap:11px;flex-wrap:wrap}
+    .fc-av{width:90px}
+    .fc-ph{font-size:36px}
+  }
+  /* ---------- 页面头部两栏：左边标题/按钮/路径，右边角色 ---------- */
+  .page-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,610px);
+    gap:24px;align-items:start}
+  .page-top-main{min-width:0}
+  .page-top-side{display:flex;justify-content:flex-end;min-width:0}
+  .page-top-side .fam-corner{margin:0;max-width:100%}
+  .tabs-path{margin-left:14px;color:var(--muted);font-size:12.5px;
+    font-family:Consolas,Menlo,monospace;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  @media (max-width:1180px){
+    .page-top{grid-template-columns:minmax(0,1fr);gap:16px}
+    .page-top-side{justify-content:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<div id="banner">
+  <span class="bow" title="三丽鸥"></span>
+  <span><b>网页测试版</b>　零依赖单文件，双击即用，不联网、不装任何东西。</span>
+  <span>你的改动只存在浏览器 localStorage，<b>不会写到磁盘</b>；改完可以「下载 .md」拿回文件。</span>
+  <span>演示数据的日期已自动对齐到今天。</span>
+  <span class="banner-actions">
+    <span id="selfTest" style="color:var(--muted)">自检中…</span>
+    <button id="btnSelfTest">查看自检结果</button>
+    <button id="btnReset">清空我的修改</button>
+  </span>
+</div>
+
+<script>
+/* ---------------------------------------------------------------------------
+   这段必须放在所有脚本之前。
+   作用：如果后面的脚本有语法错误或运行时报错，把错误直接显示在页面上，
+   而不是让你看到一个什么都没有的白屏。出错时请把红色区域里的文字复制发我。
+   --------------------------------------------------------------------------- */
+window.showFatal = function (title, detail) {
+  try {
+    var host = document.getElementById('fatal');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'fatal';
+      host.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;'
+        + 'background:#f9eef2;border-bottom:2px solid #8f3550;color:#78324a;'
+        + 'padding:14px 18px;font:13px/1.6 Consolas,Menlo,monospace;'
+        + 'white-space:pre-wrap;max-height:46vh;overflow:auto';
+      (document.body || document.documentElement).appendChild(host);
+    }
+    host.textContent = '【' + title + '】\n' + detail
+      + '\n\n>>> 请把上面这段文字整段复制发给我 <<<';
+  } catch (e) { /* 兜底：这里绝对不能再抛异常 */ }
+};
+window.addEventListener('error', function (ev) {
+  window.showFatal('脚本错误',
+    (ev.message || '未知错误') + '\n位置：第 ' + (ev.lineno || '?') + ' 行，第 ' + (ev.colno || '?') + ' 列');
+});
+window.addEventListener('unhandledrejection', function (ev) {
+  window.showFatal('未处理的异常', String((ev.reason && ev.reason.message) || ev.reason));
+});
+</script>
+
+<div id="app">
+  <aside id="nav"></aside>
+  <main id="main"></main>
+  <aside id="context"></aside>
+</div>
+
+<!-- =====================================================================
+     内嵌的演示图库。每一块就是磁盘上的一个真实的 .md 文件。
+     用 <script type="text/plain"> 存放，浏览器不会执行、也不会做实体转义。
+     @TODAY@ / @TODAY-1@ / @TODAY-2@ 会在加载时替换成真实日期。
+     ===================================================================== -->
+
+<script type="text/plain" class="vault-file" data-path="journals/@TODAY@.md">
+- 这是一篇**示例日记**，用来展示格式。可以随意改，不影响磁盘文件。
+- ## 今天做了什么
+  - 上午把 [[示例项目]] 的接口文档过了一遍
+  - 下午和 [[张三]] 确认了对齐方式，决定先做最小可用版本
+- ## 工作和进展
+  - 关于 [[示例项目]] 的一个关键决策：
+    - 决定：先不做多语言，等主流程跑通再说
+    - 原因：多语言会拖慢第一版上线，而且现在没有海外需求
+    - 这条已经搬到 [[示例项目]] 的「关键决策记录」里了
+  - TODO 明天把接口文档的字段定义补全
+- ## 感受 / 状态
+  - 状态还行，下午效率比上午高。看来复杂的事应该放下午做
+- ## 明天要做
+  - TODO 补全 [[示例项目]] 接口文档字段定义
+  - TODO 找 [[张三]] 要上一版的测试数据
+</script>
+
+<script type="text/plain" class="vault-file" data-path="journals/@TODAY-1@.md">
+- ## 今天做了什么
+  - 把启动会的结论补进了 [[示例项目]]
+  - 和 [[张三]] 对齐了测试数据的时间点
+- ## 工作和进展
+  - DONE 补全 [[示例项目]] 的项目背景与关键决策
+  - TODO 输出第一版的接口字段定义
+- ## 感受 / 状态
+  - 状态一般，下午被会议打断了好几次
+- ## 明天要做
+  - TODO 输出第一版接口字段定义
+</script>
+
+<script type="text/plain" class="vault-file" data-path="journals/@TODAY-2@.md">
+- ## 今天做了什么
+  - 参加 [[示例项目]] 的启动会，明确了第一版范围
+  - 整理了一份 [[数据库迁移操作步骤]] 的初稿
+- ## 工作和进展
+  - DONE 参加 [[示例项目]] 启动会
+  - 会上定了一个原则：第一版只做核心流程，附件功能放二期
+- ## 感受 / 状态
+  - 开会时间偏长，下次提前要议题
+- ## 明天要做
+  - TODO 把启动会的结论补进 [[示例项目]]
+</script>
+
+<script type="text/plain" class="vault-file" data-path="pages/工作手册.md">
+- type:: 索引
+- # 工作手册
+- 这里是工作信息的**唯一查找入口**。日记只写日记，工作内容直接写在这里。
+-
+- ## 快速入口
+  - [[待办总览]] —— 所有未完成、进行中的事
+  - [[本周工作]] —— 本周完成与进行中的自动汇总
+-
+- ## 四大分区
+  - ### 1. 速查：项目与人物
+    - 项目页用「项目档案」模板新建
+    - **查找技巧**：打开某个项目页，右侧 **反向链接** 会自动列出所有提到过它的日记和手册页 —— 这就是"这件事的完整历史"，不用手动整理
+  - ### 2. 跟踪：待办
+    - 用 `TODO` / `DOING` / `DONE` 标记
+    - 建议写在对应的项目页下（这样待办有上下文），[[待办总览]] 会自动汇总
+  - ### 3. 沉淀：经验与流程
+    - 打上 `#经验` 标签
+    - 命名用**你将来会搜的词**，例如「上线前检查清单」而不是「经验 12」
+  - ### 4. 取材：写周报月报
+    - 新建周报页，用「周报」模板
+    - 模板里自带查询，会自动列出过去 7 天标记为 `DONE` 的事项
+    - 你的工作是**筛选和措辞**，不是回忆
+-
+- ## 命名约定
+  - 项目页：`项目名`（如 `示例项目`），不要加「项目」二字当后缀
+  - 人物页：`姓名`（如 `张三`）
+  - 经验页：`动作 + 对象`（如 `数据库迁移操作步骤`）
+  - 周报页：`YYYY-Www 周报`
+</script>
+
+<script type="text/plain" class="vault-file" data-path="pages/示例项目.md">
+- type:: 项目
+- status:: 进行中
+- 负责人（我）：我
+- 相关人：[[张三]]
+- 起止时间：本月起，预计两个月
+- ## 这个项目做什么
+  - 把现在的手工流程搬到一个内部系统里，减少重复录入
+- ## 背景 / 为什么要做
+  - 现在每个月光是手工汇总就要花掉两天，而且容易漏
+- ## 关键决策记录
+  - 格式：日期 — 决定了什么 — 为什么这么定 — 谁定的
+  - 第一版只做核心流程，附件功能放二期 — 要先看到端到端跑通 — 启动会集体决定
+  - 不做多语言 — 会拖慢第一版上线，且当前没有海外需求 — 我定的
+- ## 当前待办
+  - TODO 输出第一版接口字段定义
+  - TODO 找 [[张三]] 要上一版的测试数据
+  - DOING 梳理第一版的页面清单
+- ## 已完成
+  - DONE 参加启动会，明确第一版范围
+  - DONE 补全项目背景与关键决策
+- ## 风险 / 卡点
+  - 上游数据质量不稳定，可能需要额外清洗
+- ## 相关经验
+  - [[数据库迁移操作步骤]]
+</script>
+
+<script type="text/plain" class="vault-file" data-path="pages/张三.md">
+- type:: 人物
+- 部门 / 角色：技术组，负责数据接口
+- 怎么联系：企业微信
+- ## 我和他打过什么交道
+  - 启动会上确认了对齐方式，倾向先做最小可用版本
+  - 答应提供上一版的测试数据
+- ## 他关心什么 / 沟通要点
+  - 关心改动量，不喜欢临时的紧急需求
+- ## 待跟进
+  - TODO 催一下上一版测试数据
+</script>
+
+<script type="text/plain" class="vault-file" data-path="pages/数据库迁移操作步骤.md">
+- type:: 经验
+- tags:: #经验
+- 适用场景：需要把数据从旧库搬到新库，且不能停机太久
+- ## 问题长什么样
+  - 旧库还在写，新库结构不一样，直接导出导入会丢数据
+- ## 标准做法
+  - 1. 先只同步增量，不动历史数据
+  - 2. 双写一周，观察两边数据是否一致
+  - 3. 确认一致后切读流量
+  - 4. 最后一次性搬历史数据
+- ## 为什么这么做
+  - 任何一步出问题都能马上切回旧库
+- ## 踩过的坑
+  - 曾经没做双写就直接切，结果漏了三天的数据
+- ## 来源
+  - 相关项目：[[示例项目]]
+</script>
+
+<script type="text/plain" class="vault-file" data-path="pages/待办总览.md">
+- type:: 索引
+- # 待办总览
+- 自动汇总整个图库里所有未完成的事项，不需要手动维护。
+-
+- ## 未开始 / 进行中
+  - {{query (task TODO DOING)}}
+- ## 最近 7 天已完成的
+  - {{query (and (task DONE) (between -7d today))}}
+-
+- ## 使用说明
+  - 这里的查询结果是**只读**的，点一下能跳回原来那一页去改状态
+  - 待办建议写在**对应的项目页**里，而不是全部堆在这一页 —— 这样待办自带上下文
+</script>
+
+<script type="text/plain" class="vault-file" data-path="pages/本周工作.md">
+- type:: 索引
+- # 本周工作
+- 写周报时打开这一页，材料已经自动汇总好了，你只需要筛选和措辞。
+-
+- ## 本周完成
+  - {{query (and (task DONE) (between -7d today))}}
+-
+- ## 本周仍在进行
+  - {{query (and (task TODO DOING) (between -7d today))}}
+-
+- ## 写周报的流程
+  - 1. 新建一页，命名格式：`2026-W41 周报`
+  - 2. 用「周报」模板
+  - 3. 把上面查询里**重要的几条**搬进「本周完成」，不要全搬
+</script>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   1. 载入内嵌图库 + 合并浏览器里的本地修改
+   ========================================================================= */
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function ymd(d){ return d.getFullYear()+'_'+pad2(d.getMonth()+1)+'_'+pad2(d.getDate()); }
+function iso(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+function dayOffset(n){ const d=new Date(TODAY); d.setDate(d.getDate()+n); return d; }
+
+function expandPath(p){
+  return p.replace('@TODAY-2@', ymd(dayOffset(-2)))
+          .replace('@TODAY-1@', ymd(dayOffset(-1)))
+          .replace('@TODAY@',   ymd(dayOffset(0)));
+}
+
+const RAW = {};
+document.querySelectorAll('script.vault-file').forEach(function(el){
+  const p = expandPath(el.dataset.path);
+  RAW[p] = el.textContent.replace(/^\n/, '').replace(/\s+$/, '');
+});
+
+const LS_KEY = 'diary-web-edits-v1';
+const LS_DEL = 'diary-web-deleted-v1';
+let EDITS   = {};
+let DELETED = {};      // 删除墓碑：内嵌图库里的页面删不掉本体，靠它从列表里消失
+try { EDITS = JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch(e){ EDITS = {}; }
+try { DELETED = JSON.parse(localStorage.getItem(LS_DEL) || '{}') || {}; } catch(e){ DELETED = {}; }
+
+function persist(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(EDITS)); }catch(e){
+  alert('浏览器拒绝了本地存储，你的修改无法保存。'); } }
+function persistDeleted(){ try{ localStorage.setItem(LS_DEL, JSON.stringify(DELETED)); }catch(e){} }
+
+function isDeleted(path){ return Object.prototype.hasOwnProperty.call(DELETED, path); }
+
+function content(path){
+  if (isDeleted(path)) return '';
+  return Object.prototype.hasOwnProperty.call(EDITS, path) ? EDITS[path] : (RAW[path] || '');
+}
+function isEdited(path){
+  return !isDeleted(path) && Object.prototype.hasOwnProperty.call(EDITS, path);
+}
+function setContent(path, text){
+  delete DELETED[path];          // 重新写入一页 = 撤销它的删除标记
+  EDITS[path] = text;
+  persist(); persistDeleted();
+}
+function revert(path){ delete EDITS[path]; persist(); }
+
+// 删除一页：只立墓碑，内容原封不动留着。
+// 千万不要顺手 delete EDITS[path] —— 那样只存在于浏览器的页面就永久没了，
+// 「恢复」拿不回来。墓碑足够让它从 allPaths 和 content 里消失。
+function deletePage(path){
+  DELETED[path] = 1;
+  persistDeleted();
+}
+function restorePage(path){
+  delete DELETED[path];
+  persistDeleted();
+}
+function deletedPaths(){
+  return Object.keys(DELETED).sort();
+}
+
+function allPaths(){
+  const set = Object.keys(RAW).filter(function(p){ return !isDeleted(p); });
+  Object.keys(EDITS).forEach(function(p){
+    if (!isDeleted(p) && set.indexOf(p) < 0) set.push(p);
+  });
+  return set;
+}
+
+/* =========================================================================
+   2. 路径 / 页面名 / 索引
+   ========================================================================= */
+
+function baseName(path){ return path.split('/').pop().replace(/\.md$/,''); }
+function isJournal(path){ return path.indexOf('journals/') === 0; }
+function journalDate(path){
+  const m = baseName(path).match(/^(\d{4})[_-](\d{2})[_-](\d{2})$/);
+  return m ? (m[1]+'-'+m[2]+'-'+m[3]) : null;
+}
+function title(path){ return isJournal(path) ? (journalDate(path) || baseName(path)) : baseName(path); }
+function parentFolder(path){ return path.split('/').slice(0,-1).join('/'); }
+
+const BY_NAME = new Map();
+function rebuildIndex(){
+  BY_NAME.clear();
+  allPaths().forEach(function(p){ BY_NAME.set(baseName(p).toLowerCase(), p); });
+}
+function resolveLink(name){ return BY_NAME.get(String(name).trim().toLowerCase()) || null; }
+
+const WIKILINK_RE = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
+
+function backlinksTo(path){
+  const target = baseName(path).toLowerCase();
+  const out = [];
+  allPaths().forEach(function(p){
+    if (p === path) return;
+    const text = content(p);
+    let m, count = 0;
+    WIKILINK_RE.lastIndex = 0;
+    while ((m = WIKILINK_RE.exec(text)) !== null){
+      if (m[1].trim().toLowerCase() === target) count++;
+    }
+    if (count) out.push({ path:p, count:count });
+  });
+  return out.sort(function(a,b){ return b.count - a.count; });
+}
+
+function outgoing(path){
+  const text = content(path), out = [];
+  let m; WIKILINK_RE.lastIndex = 0;
+  while ((m = WIKILINK_RE.exec(text)) !== null){
+    const name = m[1].trim();
+    if (out.some(function(o){ return o.name === name; })) continue;
+    out.push({ name:name, path: resolveLink(name) });
+  }
+  return out;
+}
+
+function propertiesOf(path){
+  const props = [];
+  content(path).split(/\r?\n/).forEach(function(line){
+    const body = line.replace(/^\s*[-*+]\s+/,'').trim();
+    const m = body.match(/^([A-Za-z][A-Za-z0-9_-]*)::\s*(.*)$/);
+    if (m) props.push({ key:m[1], value:m[2] });
+  });
+  return props;
+}
+function propValue(path, key){
+  const hit = propertiesOf(path).filter(function(p){ return p.key.toLowerCase() === key; })[0];
+  return hit ? hit.value : null;
+}
+
+/* =========================================================================
+   2.4 可爱的 Emoji 映射
+   -------------------------------------------------------------------------
+   按标题里的关键词挑 emoji；匹配不到就用「标题文字的哈希」挑一个。
+   用哈希而不是随机数，是为了让同一个标题每次刷新都显示同一个 emoji。
+   ========================================================================= */
+
+// 想自己控制 emoji（例如直接在标题里手写 🍓）就把这个改成 false
+const EMOJI_AUTO = true;
+
+const EMOJI_RULES = [
+  [/今天|今日|当天/i, '📝'],
+  [/明天|明日|计划|打算|下一步|接下来/i, '🌟'],
+  [/工作|任务|进展|进度/i, '💼'],
+  [/感受|心情|状态|情绪|mood/i, '💗'],
+  [/待办|todo|to-?do|要做/i, '✅'],
+  [/已完成|完成|搞定|done/i, '🎉'],
+  [/风险|卡点|阻塞|隐患|blocked/i, '⚠️'],
+  [/背景|为什么|缘由|起因/i, '📖'],
+  [/决策|决定|结论/i, '🧸'],
+  [/项目|project/i, '🎀'],
+  [/经验|教训|总结|沉淀|复盘/i, '💡'],
+  [/人物|相关人|同事|联系人|客户/i, '🐰'],
+  [/入口|导航|索引|目录/i, '🌸'],
+  [/命名|约定|规范|规则/i, '🏷️'],
+  [/做法|步骤|流程|操作|清单|手册/i, '📋'],
+  [/坑|错误|失误|故障|事故/i, '🕳️'],
+  [/来源|参考|链接|出处/i, '🔗'],
+  [/场景|适用|何时/i, '🎯'],
+  [/说明|备注|注意|提示/i, '💬'],
+  [/周报|月报|汇报|报告/i, '📮'],
+  [/进行中|进行|开工|正在|本周/i, '🚧'],
+  [/跟进|催促|提醒|催/i, '🔔'],
+  [/沟通|要点|对接|联系/i, '💌'],
+  [/打交道|协作|合作|配合/i, '🤝'],
+  [/目标|做什么|干什么/i, '🎯'],
+  [/数据|统计|指标|数字/i, '📊'],
+  [/学习|读书|阅读|笔记/i, '📚'],
+  [/健康|运动|锻炼|身体/i, '🍎'],
+  [/钱|财务|预算|花费/i, '🍰'],
+  [/家庭|家人|孩子|父母/i, '🏠'],
+  [/旅行|出行|旅游|行程/i, '🧳'],
+  [/天气|季节|气候/i, '🌈'],
+  [/问题|疑问|待确认/i, '❓']
+];
+
+const EMOJI_FALLBACK = ['🎀','🐰','⭐','🍮','🐱','🍓','🌙','🫧','🍰','💗','🌸','🐶'];
+
+function emojiFor(text){
+  if (!EMOJI_AUTO) return '';
+  const s = String(text == null ? '' : text);
+  for (let i = 0; i < EMOJI_RULES.length; i++){
+    if (EMOJI_RULES[i][0].test(s)) return EMOJI_RULES[i][1];
+  }
+  let h = 0;                                   // 内容哈希 → 稳定，不会每次刷新都变
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 99991;
+  return EMOJI_FALLBACK[h % EMOJI_FALLBACK.length];
+}
+
+// 按页面顶部的 type:: 属性挑 emoji —— 一页一个三丽鸥角色
+function emojiForPath(path){
+  if (!EMOJI_AUTO) return '';
+  if (isJournal(path)) return '🐱';               // Hello Kitty
+  const t = String(propValue(path, 'type') || '').trim();
+  if (t === '项目') return '🎀';                   // 蝴蝶结
+  if (t === '人物') return '🐰';                   // 美乐蒂
+  if (t === '经验') return '🍮';                   // 布丁狗
+  if (t === '周报') return '🌙';                   // 双子星
+  if (t === '索引') return '⭐';                   // 双子星
+  return '🐶';                                     // 大耳狗
+}
+
+// 关掉自动 emoji 时不留下多余的空格
+function emojiPre(e){ return e ? e + ' ' : ''; }
+function withEmoji(text){ return emojiPre(emojiFor(text)) + esc(text); }
+
+/* =========================================================================
+   2.5 把页面切成「标题 → 内容」，供表格视图使用
+   -------------------------------------------------------------------------
+   规则：  #   一级标题 → 当作页面标题，不占表格的一列
+          ##  二级标题 → 表格的一列
+          ### 及以下 → 当作单元格里的普通条目
+          标题之前的内容 → 归到「（开头）」列
+   ========================================================================= */
+
+const HEADING_RE = /^(#{1,6})\s+(.*)$/;
+
+function parseSections(path){
+  const lines = content(path).split(/\r?\n/);
+  const sections = [];
+  let cur = null, lastItem = null, lastIndent = -1, inCode = false;
+
+  function openSection(heading){
+    cur = { heading: heading || '', items: [] };
+    sections.push(cur);
+    lastItem = null; lastIndent = -1;
+  }
+
+  for (let i = 0; i < lines.length; i++){
+    const raw = lines[i].replace(/\t/g, '  ');
+    const t = raw.trim();
+    if (/^```/.test(t)){ inCode = !inCode; continue; }
+    if (inCode || !t) continue;
+
+    const lm = raw.match(/^(\s*)[-*+]\s+(.*)$/);
+    const indent = lm ? lm[1].length : -1;
+    let body = (lm ? lm[2] : t).trim();
+
+    const hm = body.match(HEADING_RE);
+    if (hm){
+      const lv = hm[1].length;
+      if (lv === 1) continue;                       // 页面标题，跳过
+      if (lv === 2){ openSection(hm[2].trim()); continue; }
+      body = hm[2].trim();                           // 三级及以下当普通条目
+    }
+    if (/^-{3,}$/.test(body)) continue;
+
+    if (!cur) openSection('');
+    if (indent >= 0 && lastItem && indent > lastIndent){
+      lastItem.sub.push(body);                       // 缩进更深 = 上一条的子项
+    } else {
+      lastItem = { text: body, sub: [] };
+      lastIndent = indent;
+      cur.items.push(lastItem);
+    }
+  }
+  return sections.filter(function(s){ return s.heading || s.items.length; });
+}
+
+// 单元格里也要显示 TODO / DOING / DONE 徽章
+function inlineWithTask(text){
+  const m = String(text).match(TASK_RE);
+  if (m){
+    const st = m[1].toUpperCase();
+    return '<span class="task '+st+'">'+st+'</span>'+inline(m[2]);
+  }
+  return inline(text);
+}
+
+const QUERY_RE = /^\{\{query\s+(.*?)\}\}$/;
+
+function itemsCell(items){
+  if (!items || !items.length) return '<span class="cell-empty">—</span>';
+  let html = '<ul class="cell-list">';
+  items.forEach(function(it){
+    // 单元格里的 {{query ...}} 直接展开成结果，而不是显示成一串代码
+    const qm = String(it.text).match(QUERY_RE);
+    if (qm){
+      const results = runQuery(qm[1].trim());
+      if (!results.length){
+        html += '<li class="cell-query"><span class="cell-empty">无匹配</span></li>';
+      } else {
+        results.forEach(function(t){
+          html += '<li><span class="task '+t.status+'">'+t.status+'</span>'
+                + inline(t.text)
+                + ' <span class="q-src">'+esc(title(t.path))+'</span></li>';
+        });
+      }
+      return;
+    }
+    html += '<li>' + inlineWithTask(it.text);
+    if (it.sub && it.sub.length){
+      html += '<ul>' + it.sub.map(function(s){ return '<li>'+inlineWithTask(s)+'</li>'; }).join('') + '</ul>';
+    }
+    html += '</li>';
+  });
+  return html + '</ul>';
+}
+
+// 行 × 列的数据准备。列 = 所有行里出现过的二级标题（按首次出现顺序）
+function tableData(paths, labelOf){
+  const rows = paths.map(function(p){
+    return { path:p, label: labelOf(p), sections: parseSections(p) };
+  });
+  const cols = [];
+  rows.forEach(function(r){
+    r.sections.forEach(function(s){
+      const key = s.heading;
+      if (!cols.some(function(c){ return c.key === key; })) {
+        cols.push({ key:key, label: key || '（开头）' });
+      }
+    });
+  });
+  return { rows:rows, cols:cols };
+}
+
+function rowCellHtml(row, colKey){
+  const items = [];
+  row.sections.forEach(function(s){
+    if (s.heading === colKey) s.items.forEach(function(it){ items.push(it); });
+  });
+  return itemsCell(items);
+}
+
+/* =========================================================================
+   3. Markdown / Logseq 渲染器（自己实现，不依赖任何库）
+   ========================================================================= */
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function attr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// 行内格式。注意：输入先整体转义，因此之后插入的标签是安全的。
+function inline(text){
+  let s = esc(text);
+
+  s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function(m,a,u){
+    return '<img alt="'+attr(a)+'" src="'+attr(u)+'">';
+  });
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function(m,t,u){
+    return '<a href="'+attr(u)+'" target="_blank" rel="noreferrer">'+t+'</a>';
+  });
+  s = s.replace(/`([^`]+)`/g, function(m,c){ return '<code>'+c+'</code>'; });
+
+  // [[页面]] / [[页面|显示文字]]
+  s = s.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(m,tgt,label){
+    const name = tgt.trim();
+    const text = (label || name);
+    const target = resolveLink(name);
+    if (target) return '<a class="wikilink" data-goto="'+attr(target)+'">'+text+'</a>';
+    return '<a class="wikilink missing" data-new="'+attr(name)+'">'+text+'</a>';
+  });
+
+  // #标签
+  s = s.replace(/(^|[\s(（【>])#([A-Za-z0-9_\u4e00-\u9fa5\-\/]+)/g, function(m,pre,tag){
+    const target = resolveLink(tag);
+    if (target) return pre+'<a class="tag" data-goto="'+attr(target)+'">#'+tag+'</a>';
+    return pre+'<a class="tag missing" data-tag="'+attr(tag)+'">#'+tag+'</a>';
+  });
+
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(^|[^*\w])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  return s;
+}
+
+const TASK_RE = /^(TODO|DOING|DONE|NOW)\s+(.*)$/i;
+
+function renderBody(body){
+  const hm = body.match(/^(#{1,6})\s+(.*)$/);
+  if (hm){
+    const lv = hm[1].length;
+    return '<h'+lv+'>'+emojiPre(emojiFor(hm[2]))+inline(hm[2])+'</h'+lv+'>';
+  }
+  const pm = body.match(/^([A-Za-z][A-Za-z0-9_-]*)::\s*(.*)$/);
+  if (pm){
+    return '<span class="prop"><b>'+esc(pm[1])+'</b>　'+inline(pm[2])+'</span>';
+  }
+  const tm = body.match(TASK_RE);
+  if (tm){
+    const st = tm[1].toUpperCase();
+    return '<span class="task '+st+'">'+st+'</span>'
+         + '<span class="task-text">'+inline(tm[2])+'</span>';
+  }
+  return inline(body);
+}
+
+// 阿拉伯数字 → 中文序号：1→一  10→十  11→十一  25→二十五
+const CN_DIGIT = ['零','一','二','三','四','五','六','七','八','九'];
+function cnOrdinal(n){
+  n = Math.floor(Number(n) || 0);
+  if (n <= 0 || n > 99) return String(n);
+  if (n < 10)  return CN_DIGIT[n];
+  if (n === 10) return '十';
+  const t = Math.floor(n / 10), o = n % 10;
+  return (t === 1 ? '' : CN_DIGIT[t]) + '十' + (o ? CN_DIGIT[o] : '');
+}
+
+function renderDoc(path){ return renderDocText(content(path)); }
+
+// 纯文本版，方便自检直接喂字符串进来测（不用造文件）
+function renderDocText(text){
+  const lines = String(text == null ? '' : text).split(/\r?\n/);
+  const cards = [];        // 已经写完的卡片
+  let cur = '';            // 正在写的那张
+  const stack = [];        // 记录每层缩进
+  let inCode = false, codeBuf = [];
+
+  function closeAll(){ while(stack.length){ cur += '</li></ul>'; stack.pop(); } }
+  function flush(){
+    closeAll();
+    if (cur.trim()) cards.push(cur);
+    cur = '';
+  }
+
+  for (let i=0; i<lines.length; i++){
+    const line = lines[i].replace(/\t/g,'  ');
+    const trimmed = line.trim();
+
+    if (/^```/.test(trimmed)){
+      if (inCode){ cur += '<pre><code>'+esc(codeBuf.join('\n'))+'</code></pre>'; codeBuf=[]; inCode=false; }
+      else { closeAll(); inCode = true; }
+      continue;
+    }
+    if (inCode){ codeBuf.push(line); continue; }
+
+    if (!trimmed){ closeAll(); continue; }
+
+    // {{query ...}}
+    const qm = trimmed.match(/^\{\{query\s+(.*?)\}\}$/);
+    if (qm){ closeAll(); cur += renderQueryBlock(qm[1].trim()); continue; }
+
+    if (/^-{3,}$/.test(trimmed)){ closeAll(); cur += '<hr>'; continue; }
+
+    const lm = line.match(/^(\s*)[-*+]\s+(.*)$/);
+    let body, indent = -1;
+    if (lm){ indent = lm[1].length; body = lm[2]; }
+    else { body = trimmed; }
+
+    // 「小节标签行」：顶格、很短、以冒号结尾 —— 例如「原文：」「注意：」
+    // 这类行没写 ##，但一眼就是个小节标题，也该单独分一个框。
+    // 长度卡在 13 字以内，是为了别把「明天要买的东西：牛奶和鸡蛋」这种句子切开。
+    const label = body.match(/^([^\s#][^：:]{0,12})[：:]\s*$/);
+    if (indent <= 0 && label){
+      flush();
+      cur = '<h2 class="doc-label">'+emojiPre(emojiFor(label[1]))+inline(label[1])+'</h2>';
+      continue;
+    }
+
+    // # / ## / ### 标题 = 卡片分界。Logseq 里小节标题常写成「- ## 标题」，
+    // 三级标题也一样要分框 —— 之前只认 #{1,2}，结果 ### 渲染成标题却不分框，
+    // 标题就和上面的内容挤在同一个框里了。
+    // 注意必须要求 # 后面有空白，否则 #标签 会被误判成标题。
+    const hl = body.match(/^(#{1,3})\s+(.*)$/);
+    if (hl){
+      flush();
+      const lv = hl[1].length;
+      cur = '<h'+lv+'>'+emojiPre(emojiFor(hl[2]))+inline(hl[2])+'</h'+lv+'>';
+      continue;
+    }
+
+    if (indent < 0){
+      closeAll();
+      cur += '<p>'+renderBody(body)+'</p>';
+      continue;
+    }
+
+    while (stack.length && indent < stack[stack.length-1]){ cur += '</li></ul>'; stack.pop(); }
+    if (!stack.length || indent > stack[stack.length-1]){
+      cur += '<ul>'; stack.push(indent); cur += '<li>';
+    } else {
+      cur += '</li><li>';
+    }
+    const tm = body.match(TASK_RE);
+    const done = tm && tm[1].toUpperCase() === 'DONE';
+    if (done) cur = cur.replace(/<li>$/, '<li class="is-done">');
+    cur += renderBody(body);
+  }
+  if (inCode && codeBuf.length) cur += '<pre><code>'+esc(codeBuf.join('\n'))+'</code></pre>';
+  flush();
+
+  if (!cards.length) return '<div class="empty">这一页还是空的。</div>';
+
+  // 每张卡片套一个框，并给一个中文序号（一、二、三……）。
+  // 开头那段没有标题的正文（前言 / 只有散句的页面）也算一张。
+  return cards.map(function(c, i){
+    const lv = (c.match(/^<h([1-3])[ >]/) || [])[1] || '';
+    const no = '<span class="card-no">' + cnOrdinal(i + 1) + '、</span>';
+
+    // 有标题就插进标题里；没标题就单起一行放序号
+    const hm = c.match(/^(<h[1-3][^>]*>)/);
+    const body = hm
+      ? hm[1] + no + c.slice(hm[1].length)
+      : '<div class="card-no-row">' + no + '</div>' + c;
+
+    return '<section class="doc-card' + (lv ? ' lv'+lv : '') + '">' + body + '</section>';
+  }).join('');
+}
+
+/* =========================================================================
+   4. 任务与查询
+   ========================================================================= */
+
+function collectTasks(){
+  const tasks = [];
+  allPaths().forEach(function(p){
+    const jd = journalDate(p);
+    const pd = propValue(p, 'date');
+    const lines = content(p).split(/\r?\n/);
+    lines.forEach(function(line, idx){
+      const body = line.replace(/^\s*[-*+]\s+/,'').trim();
+      const m = body.match(TASK_RE);
+      if (m){
+        tasks.push({
+          path:p, status:m[1].toUpperCase(), text:m[2],
+          date: jd, propDate: pd, line: idx+1
+        });
+      }
+    });
+  });
+  return tasks;
+}
+
+function taskTime(t){
+  const s = t.date || t.propDate;
+  if (!s) return null;
+  const d = new Date(s+'T00:00:00');
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function runQuery(expr){
+  const tasks = collectTasks();
+  const sm = expr.match(/\(task\s+([^)]*)\)/i);
+  const statuses = sm ? sm[1].trim().split(/\s+/).map(function(s){ return s.toUpperCase(); }) : [];
+  const bm = expr.match(/\(between\s+(-?\d+)d\s+today\)/i);
+  let cutoff = null;
+  if (bm){ cutoff = dayOffset(parseInt(bm[1],10)); }
+
+  return tasks.filter(function(t){
+    if (statuses.length && statuses.indexOf(t.status) < 0) return false;
+    if (cutoff){
+      const when = taskTime(t);
+      if (!when) return false;       // 没有日期来源的任务，不参与时间范围过滤
+      if (when < cutoff) return false;
+    }
+    return true;
+  });
+}
+
+function renderTasks(tasks){
+  if (!tasks.length) return '<div class="q-empty">没有匹配的结果</div>';
+  const groups = {};
+  tasks.forEach(function(t){ (groups[t.path] = groups[t.path] || []).push(t); });
+  let html = '';
+  Object.keys(groups).forEach(function(p){
+    html += '<div class="q-file">📌 来自 <a class="wikilink" data-goto="'+attr(p)+'">'+esc(title(p))+'</a></div><ul>';
+    groups[p].forEach(function(t){
+      html += '<li><span class="task '+t.status+'">'+t.status+'</span>'
+            + '<span class="task-text'+(t.status==='DONE'?' done':'')+'">'+inline(t.text)+'</span></li>';
+    });
+    html += '</ul>';
+  });
+  return html;
+}
+
+function renderQueryBlock(expr){
+  const results = runQuery(expr);
+  return '<div class="query"><div class="q-head">{{query '+esc(expr)+'}}</div>'
+       + renderTasks(results) + '</div>';
+}
+
+/* =========================================================================
+   5. 搜索
+   ========================================================================= */
+
+function search(query){
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const hits = [];
+  allPaths().forEach(function(p){
+    const lines = content(p).split(/\r?\n/);
+    const matches = [];
+    lines.forEach(function(line, idx){
+      if (line.toLowerCase().indexOf(q) >= 0) matches.push({ line:line.trim(), no:idx+1 });
+    });
+    if (matches.length) hits.push({ path:p, matches:matches });
+  });
+  return hits.sort(function(a,b){ return b.matches.length - a.matches.length; });
+}
+
+function highlight(text, q){
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return esc(text);
+  return esc(text.slice(0,i)) + '<em>' + esc(text.slice(i, i+q.length)) + '</em>' + esc(text.slice(i+q.length));
+}
+
+/* =========================================================================
+   6. 统计（连续天数 + 字数热力图）
+   ========================================================================= */
+
+function cleanChars(text){
+  let t = text.replace(/\{\{[^}]*\}\}/g, '')
+              .replace(/^\s*#\+(BEGIN|END)_\w+.*$/gm, '')
+              .replace(/(SCHEDULED|DEADLINE|CLOSED):\s*<[^>]*>/g, '');
+  const kept = [];
+  let inCode = false;
+  t.split(/\r?\n/).forEach(function(line){
+    if (line.trim().indexOf('```') === 0){ inCode = !inCode; return; }
+    if (inCode) return;
+    if (/^\s*[A-Za-z][A-Za-z0-9_-]*::/.test(line)) return;
+    line = line.replace(/^\s*[-*+]\s+/,'')
+               .replace(/^\s*(TODO|DOING|DONE|NOW)\s+/i,'')
+               .replace(/^\s*#{1,6}\s*/,'')
+               .replace(/!?\[[^\]]*\]\([^)]*\)/g,'')
+               .replace(/https?:\/\/\S+/g,'')
+               .replace(/`[^`]*`/g,'');
+    kept.push(line);
+  });
+  t = kept.join('\n').replace(/[*_~]{1,3}/g,'').replace(/[\[\]{}]/g,'');
+  let n = 0;
+  for (const ch of t) if (!/\s/.test(ch)) n++;
+  return n;
+}
+
+function journalStats(){
+  const days = {};
+  allPaths().forEach(function(p){
+    if (!isJournal(p)) return;
+    const ds = journalDate(p);
+    if (!ds) return;
+    days[ds] = (days[ds] || 0) + cleanChars(content(p));
+  });
+  return days;
+}
+
+function streaks(dayKeys){
+  const list = dayKeys.slice().sort();
+  if (!list.length) return { current:0, longest:0 };
+  let longest = 1, run = 1;
+  for (let i=1; i<list.length; i++){
+    const prev = new Date(list[i-1]+'T00:00:00');
+    const cur  = new Date(list[i]+'T00:00:00');
+    if (Math.round((cur-prev)/86400000) === 1){ run++; if (run>longest) longest=run; }
+    else run = 1;
+  }
+  const has = function(d){ return list.indexOf(iso(d)) >= 0; };
+  let anchor = new Date(TODAY);
+  if (!has(anchor)) anchor = dayOffset(-1);
+  let current = 0, cursor = anchor;
+  while (has(cursor)){ current++; cursor.setDate(cursor.getDate()-1); }
+  return { current:current, longest:longest };
+}
+
+const LEVELS = [[1,150],[151,400],[401,800],[801,Infinity]];
+function levelOf(n){
+  if (n <= 0) return 0;
+  for (let i=0;i<LEVELS.length;i++) if (n >= LEVELS[i][0] && n <= LEVELS[i][1]) return i+1;
+  return 4;
+}
+
+/* =========================================================================
+   7. 视图状态与渲染
+   ========================================================================= */
+
+const state = { view:'page', path:null, search:'', editing:false,
+                tableScope:'journals', pageMode:'raw' };
+const $nav = document.getElementById('nav');
+const $main = document.getElementById('main');
+const $ctx = document.getElementById('context');
+
+function go(path){
+  state.view = 'page'; state.path = path; state.editing = false;
+  pickFamily();                  // 每打开一个页面，右上角换一位角色
+  render();
+  $main.scrollTop = 0;
+}
+
+function startEdit(){
+  if (!state.path) return;
+  state.editing = true;
+  render();
+}
+
+function renderNav(){
+  const journals = allPaths().filter(isJournal).sort(function(a,b){
+    return (journalDate(b)||'').localeCompare(journalDate(a)||'');
+  });
+  const pages = allPaths().filter(function(p){ return !isJournal(p); }).sort(function(a,b){
+    return baseName(a).localeCompare(baseName(b),'zh');
+  });
+
+  let html = '';
+  html += '<div class="nav-title">🎀 视图</div>';
+  html += '<a class="nav-item'+(state.view==='calendar'?' active':'')+'" data-view="calendar">📅 日历</a>';
+  html += '<a class="nav-item'+(state.view==='table'?' active':'')+'" data-view="table">🧮 表格视图</a>';
+  html += '<a class="nav-item'+(state.view==='ai'?' active':'')+'" data-view="ai">🪄 AI 整理</a>';
+  html += '<a class="nav-item'+(state.view==='search'?' active':'')+'" data-view="search">🔍 搜索</a>';
+  html += '<a class="nav-item'+(state.view==='stats'?' active':'')+'" data-view="stats">📊 统计</a>';
+  html += '<a class="nav-item" data-goto="pages/工作手册.md">🎀 工作手册</a>';
+  html += '<a class="nav-item" data-goto="pages/待办总览.md">✅ 待办总览</a>';
+  html += '<a class="nav-item" data-goto="pages/本周工作.md">⭐ 本周工作</a>';
+
+  // 只把「真的写了内容」的日记放进侧栏。
+  // 空白日记（从日历点进去但没写东西，只剩骨架标题）会一天天堆起来，很吵。
+  // 唯一例外：正在看的这一篇，否则你会在列表里找不到自己在哪儿。
+  // 注意不要拿 isEdited 当例外 —— 日历新建的空日记一落盘就是「已修改」，
+  // 那样等于没过滤。
+  const shownJournals = journals.filter(function(p){
+    return journalHasContent(p) || state.path === p;
+  });
+  const hiddenJournals = journals.length - shownJournals.length;
+
+  html += '<div class="nav-title">🐱 日记（'+shownJournals.length+'）'
+        + (hiddenJournals
+            ? '<span class="nav-hint">隐藏 ' + hiddenJournals + ' 篇空白</span>'
+            : '')
+        + '</div>';
+
+  if (!shownJournals.length){
+    html += '<div class="empty" style="padding:2px 12px 8px">还没有写过日记。'
+          + '去「📅 日历」点一天开始。</div>';
+  }
+  shownJournals.forEach(function(p){
+    const n = cleanChars(content(p));
+    html += '<a class="nav-item'+(state.path===p?' active':'')+'" data-goto="'+attr(p)+'">'
+          + emojiPre(emojiForPath(p)) + esc(title(p)) + ' <small style="color:var(--muted)">'+n+'字</small>'
+          + (isEdited(p) ? '<span class="dot" title="有未导出的修改"></span>' : '')
+          + '</a>';
+  });
+
+  html += '<div class="nav-title">🎀 手册页面（'+pages.length+'）</div>';
+  pages.forEach(function(p){
+    html += '<a class="nav-item'+(state.path===p?' active':'')+'" data-goto="'+attr(p)+'">'
+          + emojiPre(emojiForPath(p)) + esc(title(p))
+          + (isEdited(p) ? '<span class="dot" title="有未导出的修改"></span>' : '')
+          + '</a>';
+  });
+
+  // 已删除的页面：点一下就能恢复，免得误删之后没法挽回
+  const dels = deletedPaths();
+  if (dels.length){
+    html += '<div class="nav-title">🗑 已删除（'+dels.length+'）'
+          + '<span class="nav-hint">点一下恢复</span></div>';
+    dels.forEach(function(p){
+      html += '<a class="nav-item nav-del" data-restore="'+attr(p)+'" title="点击恢复这一页">'
+            + '↺ ' + esc(title(p)) + ' <small>'+esc(p)+'</small></a>';
+    });
+  }
+
+  $nav.innerHTML = html;
+}
+
+function sideTitle(t){ return '<div class="panel-title">' + t + '</div>'; }
+
+/* ---------- 右侧栏：今天（所有视图都显示） ---------- */
+function todaySideHtml(){
+  const todayIso = iso(TODAY);
+  const map  = journalMap();
+  const path = map[todayIso];
+  const written = !!(path && journalHasContent(path));
+  const st = streaks(Object.keys(journalStats()).sort());
+
+  let html = '<div class="side-block">' + sideTitle('今天')
+           + '<div class="side-big">' + todayIso + '</div>';
+
+  if (written){
+    html += '<div class="side-stat"><span>已写</span><b>' + cleanChars(content(path)) + ' 字</b></div>'
+          + '<a class="ctx-item" data-goto="' + attr(path) + '">📖 打开今天的日记</a>';
+  } else {
+    html += '<div class="side-stat"><span>状态</span><b>还没写</b></div>'
+          + '<a class="ctx-item" data-caldate="' + todayIso + '">✍️ 现在写今天的日记</a>';
+  }
+
+  html += '<div class="side-stat"><span>连续记录</span><b>' + st.current + ' 天</b></div>'
+        + '<div class="side-stat"><span>历史最长</span><b>' + st.longest + ' 天</b></div>'
+        + '</div>';
+  return html;
+}
+
+/* ---------- 右侧栏：页面视图（属性 / 反链 / 出链） ---------- */
+function pageSideHtml(path){
+  let html = '';
+
+  const props = propertiesOf(path);
+  if (props.length){
+    html += '<div class="side-block">' + sideTitle('属性') + '<div class="props">';
+    props.forEach(function(p){ html += '<span class="prop"><b>'+esc(p.key)+'</b>　'+esc(p.value)+'</span>'; });
+    html += '</div></div>';
+  }
+
+  const bl = backlinksTo(path);
+  html += '<div class="side-block">' + sideTitle('反向链接（'+bl.length+'）');
+  if (!bl.length){
+    html += '<div class="empty">还没有别的页面提到它</div>';
+  } else {
+    bl.forEach(function(b){
+      const first = content(b.path).split(/\r?\n/).filter(function(l){
+        return l.indexOf('[['+baseName(path)+']]') >= 0;
+      })[0] || '';
+      html += '<a class="ctx-item" data-goto="'+attr(b.path)+'">'
+            + esc(title(b.path)) + ' <span style="color:var(--muted)">×'+b.count+'</span>'
+            + '<small>'+esc(first.replace(/^\s*[-*+]\s*/,'').slice(0,60))+'</small></a>';
+    });
+  }
+  html += '</div>';
+
+  const og = outgoing(path);
+  html += '<div class="side-block">' + sideTitle('指向的页面（'+og.length+'）');
+  if (!og.length){
+    html += '<div class="empty">还没有用 [[ ]] 链接任何页面</div>';
+  } else {
+    og.forEach(function(o){
+      if (o.path) html += '<a class="ctx-item" data-goto="'+attr(o.path)+'">'+esc(o.name)+'</a>';
+      else html += '<a class="ctx-item" style="color:var(--bow)">'+esc(o.name)+' <small>尚未创建</small></a>';
+    });
+  }
+  html += '</div>';
+
+  return html;
+}
+
+/* ---------- 右侧栏：日历 ---------- */
+function calendarSideHtml(){
+  calInit();
+  const y = CAL.year, m = CAL.month;
+  const prefix = y + '-' + pad2(m);
+  const map = journalMap();
+  const days = Object.keys(map).filter(function(d){
+    return d.slice(0, 7) === prefix && journalHasContent(map[d]);
+  }).sort();
+
+  let chars = 0;
+  days.forEach(function(d){ chars += cleanChars(content(map[d])); });
+  const avg = days.length ? Math.round(chars / days.length) : 0;
+
+  let html = '<div class="side-block">'
+           + sideTitle(y + ' 年 ' + m + ' 月')
+           + '<div class="side-stat"><span>写了</span><b>' + days.length + ' 天</b></div>'
+           + '<div class="side-stat"><span>总字数</span><b>' + chars.toLocaleString() + '</b></div>'
+           + '<div class="side-stat"><span>记录日均</span><b>' + avg.toLocaleString() + ' 字</b></div>'
+           + '</div>';
+
+  html += '<div class="side-block">' + sideTitle('本月的日子（' + days.length + '）');
+  if (!days.length){
+    html += '<div class="empty">本月还没写。点日历上任意一天开始。</div>';
+  } else {
+    days.slice().reverse().forEach(function(d){
+      html += '<a class="ctx-item" data-goto="' + attr(map[d]) + '">'
+            + d.slice(5) + ' <span style="color:var(--muted)">' + cleanChars(content(map[d])) + ' 字</span>'
+            + '<small>' + esc(journalPreview(map[d], 34)) + '</small></a>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+/* ---------- 右侧栏：表格视图 ---------- */
+function tableSideHtml(){
+  const jr = allPaths().filter(isJournal);
+  const pg = allPaths().filter(function(p){ return !isJournal(p); });
+  let jc = 0;
+  jr.forEach(function(p){ jc += cleanChars(content(p)); });
+
+  let html = '<div class="side-block">' + sideTitle('图库概览')
+           + '<div class="side-stat"><span>日记</span><b>' + jr.length + ' 篇</b></div>'
+           + '<div class="side-stat"><span>手册页面</span><b>' + pg.length + ' 页</b></div>'
+           + '<div class="side-stat"><span>日记总字数</span><b>' + jc.toLocaleString() + '</b></div>';
+
+  const ds = jr.map(journalDate).filter(Boolean).sort();
+  if (ds.length){
+    html += '<div class="side-stat"><span>时间跨度</span><b>' + ds[0].slice(5) + ' ~ ' + ds[ds.length-1].slice(5) + '</b></div>';
+  }
+  html += '</div>';
+
+  const cols = ['今天做了什么','工作和进展','感受 / 状态','明天要做'];
+  html += '<div class="side-block">' + sideTitle('表格说明')
+        + '<div style="font-size:12.5px;color:var(--muted);line-height:1.8">'
+        + '表头是自动从日记里的 <code>## 标题</code> 生成的。'
+        + '你在日记里多写一个小标题，表格就多一列。</div></div>';
+  return html;
+}
+
+/* ---------- 右侧栏：统计 ---------- */
+function statsSideHtml(){
+  const days = journalStats();
+  const keys = Object.keys(days).sort();
+
+  let html = '<div class="side-block">' + sideTitle('最近 7 天');
+  let max = 1;
+  const last7 = [];
+  for (let i = 6; i >= 0; i--){
+    const d = iso(dayOffset(-i));
+    const n = days[d] || 0;
+    last7.push({ d: d, n: n });
+    if (n > max) max = n;
+  }
+  last7.forEach(function(x){
+    const pct = Math.round(x.n / max * 100);
+    html += '<div class="side-stat"><span>' + x.d.slice(5) + '</span><b>' + x.n + ' 字</b></div>'
+          + '<div class="side-bar"><i style="width:' + pct + '%"></i></div>';
+  });
+  html += '</div>';
+
+  if (keys.length){
+    let best = keys[0], worst = keys[0];
+    keys.forEach(function(k){
+      if (days[k] > days[best])  best  = k;
+      if (days[k] < days[worst]) worst = k;
+    });
+    html += '<div class="side-block">' + sideTitle('极值')
+          + '<div class="side-stat"><span>写得最多</span><b>' + best.slice(5) + '　' + days[best] + ' 字</b></div>'
+          + '<div class="side-stat"><span>写得最少</span><b>' + worst.slice(5) + '　' + days[worst] + ' 字</b></div>'
+          + '</div>';
+  }
+  return html;
+}
+
+/* ---------- 右侧栏：搜索 ---------- */
+function searchSideHtml(){
+  const jr = allPaths().filter(isJournal);
+  const pg = allPaths().filter(function(p){ return !isJournal(p); });
+  const hits = state.search.trim() ? search(state.search) : [];
+
+  let html = '<div class="side-block">' + sideTitle('搜索范围')
+           + '<div class="side-stat"><span>日记</span><b>' + jr.length + ' 篇</b></div>'
+           + '<div class="side-stat"><span>手册页面</span><b>' + pg.length + ' 页</b></div>';
+  if (state.search.trim()){
+    html += '<div class="side-stat"><span>本次命中</span><b>' + hits.length + ' 个页面</b></div>';
+  }
+  html += '</div>';
+
+  html += '<div class="side-block">' + sideTitle('快速搜索')
+        + '<a class="ctx-item" data-quicksearch="TODO">TODO</a>'
+        + '<a class="ctx-item" data-quicksearch="DONE">DONE</a>'
+        + '<a class="ctx-item" data-quicksearch="示例项目">示例项目</a>'
+        + '<a class="ctx-item" data-quicksearch="张三">张三</a>'
+        + '<a class="ctx-item" data-quicksearch="#经验">#经验</a>'
+        + '</div>';
+  return html;
+}
+
+/* ---------- 右侧栏：AI ---------- */
+function aiSideHtml(){
+  let html = '<div class="side-block">' + sideTitle('AI 接口')
+           + '<div class="side-stat"><span>模型</span><b>' + esc(AI_CFG.model) + '</b></div>'
+           + '<div class="side-stat"><span>思考模式</span><b>' + (AI_CFG.thinking ? '开启' : '关闭') + '</b></div>'
+           + '<div class="side-stat"><span>Key 位置</span><b>' + (AI_CFG.apiKey ? '浏览器' : '代理') + '</b></div>'
+           + '<div style="margin-top:6px">' + sideTitle('接口地址')
+           + '<div class="side-url">' + esc(aiEndpoint()) + '</div></div>'
+           + '</div>';
+
+  let wrote = 0, chars = 0;
+  const map = journalMap();
+  journalStats();
+  Object.keys(map).forEach(function(d){
+    if (journalHasContent(map[d])){ wrote++; chars += cleanChars(content(map[d])); }
+  });
+  html += '<div class="side-block">' + sideTitle('可整理的素材')
+        + '<div class="side-stat"><span>日记</span><b>' + wrote + ' 天</b></div>'
+        + '<div class="side-stat"><span>总字数</span><b>' + chars.toLocaleString() + '</b></div>'
+        + '<div style="font-size:12px;color:var(--muted);line-height:1.75;margin-top:6px">'
+        + '在编辑页点 🪄 AI 整理，会按四个小标题重组，并自动加 [[双链]] 和 TODO 标记。</div>'
+        + '</div>';
+  return html;
+}
+
+function renderContext(){
+  let html = todaySideHtml();
+
+  if (state.view === 'page' && state.path) html += pageSideHtml(state.path);
+  else if (state.view === 'calendar')      html += calendarSideHtml();
+  else if (state.view === 'table')         html += tableSideHtml();
+  else if (state.view === 'stats')         html += statsSideHtml();
+  else if (state.view === 'search')        html += searchSideHtml();
+  else if (state.view === 'ai')            html += aiSideHtml();
+
+  $ctx.innerHTML = html;
+}
+
+/* =========================================================================
+   三丽鸥家族：每个页面右上角随机显示一位
+   -------------------------------------------------------------------------
+   每打开一个页面抽一位，只显示这一个角色 + 它的介绍。
+   图片不会被自动下载。你自己保存的图片放进 web/img/ 就会自动显示；
+   没有文件时用 emoji 占位。编号对应官网 family_detailsN.html 的 N。
+   ========================================================================= */
+
+const FAMILY = [
+  { id:1, name:'凯蒂猫', en:'Hello Kitty', emoji:'🎀', color:'#e8384f',
+    desc:'用苹果来量的话，身高五个、体重三个。性格开朗又温柔，喜欢烤饼干和弹钢琴，将来想当钢琴家或诗人，最爱妈妈做的苹果派。有个双胞胎妹妹咪咪。' },
+  { id:2, name:'酷洛米', en:'Kuromi', emoji:'💀', color:'#8b5fa8',
+    desc:'自称是美乐蒂的宿敌，其实心里装满少女情怀。黑色头巾和粉色骷髅是她的标志，爱好是写日记，最近迷上了恋爱小说。' },
+  { id:3, name:'美乐蒂', en:'My Melody', emoji:'🐰', color:'#f7a8c4',
+    desc:'率真又开朗，非常疼弟弟。奶奶亲手缝的小红帽是她的宝贝，喜欢和妈妈一起烤曲奇，最爱的食物是杏仁磅蛋糕。' },
+  { id:4, name:'大耳狗', en:'Cinnamoroll', emoji:'🐶', color:'#8fd0ea',
+    desc:'出生在云朵之上的白色小狗男孩，被咖啡馆的大姐姐发现后一起生活。卷卷的尾巴像肉桂卷，名字就是这么来的。' },
+  { id:5, name:'酷企鹅', en:'Badtz-Maru', emoji:'🐧', color:'#5b5b6e',
+    desc:'爱恶作剧、脾气有点别扭的企鹅男孩。爱吃高级寿司和拉面，梦想是当大老板。看着不好惹，其实人挺不错的。' },
+  { id:6, name:'布丁狗', en:'Pompompurin', emoji:'🍮', color:'#f0c96b',
+    desc:'戴咖啡色贝雷帽的金毛犬男孩。性格悠哉，最爱听到的词是「出去玩」，最讨厌「看家」。特长是睡午觉，跟谁都能马上变成好朋友。' },
+  { id:7, name:'帕恰狗', en:'Pochacco', emoji:'🐾', color:'#8fbf6a',
+    desc:'好奇心旺盛、有点冒失、还有一点点爱管闲事的小狗男孩。最喜欢绕远路散步，身高相当于四杯他最爱的香蕉冰淇淋。' },
+  { id:8, name:'毛毯熊', en:'Marumofubiyori', emoji:'🧸', color:'#b9a8e8',
+    desc:'总把心爱的毛毯披在身上的小白熊男孩，典型的居家型。因为拖着毛毯走路的样子很像拖把，所以被叫作莫普。' }
+];
+
+// 一个角色会依次尝试这些文件名，命中哪个就用哪个
+// （浏览器「另存为」默认把 d1.png 存成 d1.png / d1 (1).png / d1 (2).png …）
+function familyCandidates(id){
+  const out = [];
+  ['png','PNG','jpg','jpeg','webp'].forEach(function(ext){
+    out.push({ url:'img/family-'+id+'.'+ext, label:'family-'+id+'.'+ext });
+  });
+  if (id === 1) out.push({ url:'img/d1.png', label:'d1.png' });
+  const k = id - 1;
+  if (k > 0){
+    ['png','PNG','jpg','jpeg'].forEach(function(ext){
+      out.push({ url:'img/d1%20('+k+').'+ext, label:'d1 ('+k+').'+ext });
+      out.push({ url:'img/d1('+k+').'+ext,    label:'d1('+k+').'+ext });
+    });
+    out.push({ url:'img/d1-'+k+'.png', label:'d1-'+k+'.png' });
+  }
+  return out;
+}
+
+// 一个角色头像：依次试 family-N.png、d1.png、d1 (k).png …，全失败就露出 emoji
+function famAvatar(f, tip){
+  const cands  = familyCandidates(f.id);
+  const rest   = cands.slice(1).map(function(c){ return c.url; }).join('|');
+  const labels = cands.map(function(c){ return c.label; }).join(' / ');
+  return '<span class="fc-av" title="'+attr(tip || f.name)+'">'
+       +   '<span class="fc-ph">'+f.emoji+'</span>'
+       +   '<img src="'+attr(cands[0].url)+'" alt="'+attr(f.name)+'"'
+       +        ' data-cand="'+attr(rest)+'" data-labels="'+attr(labels)+'"'
+       +        ' onerror="famNext(this)" onload="famLoaded(this)">'
+       + '</span>';
+}
+
+// 图片加载成功 → 藏掉 emoji 占位。不裁切，高度完全交给图片自己撑开。
+function famLoaded(img){
+  const ph = img.parentNode && img.parentNode.querySelector('.fc-ph');
+  if (ph) ph.style.display = 'none';
+}
+
+/* =========================================================================
+   写日记时的加油小伙伴（编辑页右上角）
+   -------------------------------------------------------------------------
+   图片优先用 web/img/kuromi-cheer.gif —— 你放一个进去就自动变成真动图。
+   没有 GIF 就退回库洛米立绘，用 CSS 让它弹跳摇摆，同样"动"起来。
+   ========================================================================= */
+
+const CHEER_LINES = [
+  '写吧写吧，库洛米看着你呢～',
+  '加油！今天也辛苦啦 💜',
+  '再写两句就休息一下吧～',
+  '写得乱没关系，反正 AI 会整理',
+  '已经写了这么多，很厉害了 ✨',
+  '慢慢来，不着急～',
+  '这些字以后都会有用的',
+  '写完这段就奖励自己一个布丁 🍮',
+  '库洛米在给你打气 📣',
+  '想到什么就写什么，别停下来'
+];
+
+function cheerLine(){
+  return CHEER_LINES[Math.floor(Math.random() * CHEER_LINES.length)];
+}
+
+// 先试 GIF，再退回立绘（familyCandidates(2) 就是库洛米）
+function cheerCandidates(){
+  const out = [
+    { url:'img/kuromi-cheer.gif', label:'kuromi-cheer.gif' },
+    { url:'img/kuromi-cheer.GIF', label:'kuromi-cheer.GIF' },
+    { url:'img/kuromi.gif',       label:'kuromi.gif' },
+    { url:'img/cheer.gif',        label:'cheer.gif' }
+  ];
+  familyCandidates(2).forEach(function(c){ out.push(c); });
+  return out;
+}
+
+// 这张图全加载不出来就把整块藏掉，别留一个破图标在那儿
+function cheerNext(img){
+  const rest = img.dataset.cand || '';
+  const list = rest ? rest.split('|') : [];
+  if (list.length){
+    img.dataset.cand = list.slice(1).join('|');
+    img.src = list[0];
+    return;
+  }
+  const box = document.getElementById('cheer');
+  if (box) box.style.display = 'none';
+}
+
+function cheerHtml(){
+  const c    = cheerCandidates();
+  const rest = c.slice(1).map(function(x){ return x.url; }).join('|');
+  return '<div class="cheer" id="cheer">'
+       +   '<div class="cheer-bubble" id="cheerBubble">'+esc(cheerLine())+'</div>'
+       +   '<img class="cheer-img" src="'+attr(c[0].url)+'" alt="库洛米给你打气"'
+       +     ' data-cand="'+attr(rest)+'" onerror="cheerNext(this)">'
+       + '</div>';
+}
+
+let CHEER_TIMER = null;
+function stopCheer(){
+  if (CHEER_TIMER){ clearInterval(CHEER_TIMER); CHEER_TIMER = null; }
+}
+function startCheer(){
+  stopCheer();
+  CHEER_TIMER = setInterval(function(){
+    const b = document.getElementById('cheerBubble');
+    if (!b){ stopCheer(); return; }          // 已经离开编辑页
+    b.textContent = cheerLine();
+    b.style.animation = 'none';
+    void b.offsetWidth;                       // 强制重排，好让动画重新播
+    b.style.animation = 'cheerPop .45s ease both';
+  }, 9000);
+}
+
+// 候选失败 → 换下一个；全部失败 → 藏起 img，露出底下的 emoji
+function famNext(img){
+  const rest = (img.dataset.cand || '').split('|').filter(Boolean);
+  if (!rest.length){
+    img.style.display = 'none';
+    img.title = '没找到图片文件，试过：' + (img.dataset.labels || '');
+    return;
+  }
+  const next = rest.shift();
+  img.dataset.cand = rest.join('|');
+  img.src = next;
+}
+
+/* =========================================================================
+   名言库
+   -------------------------------------------------------------------------
+   来源：用户提供的《名言集》PDF 正文提取，按正文顺序全量录入。
+   OCR 原貌保留（含错别字、标点异常），没有做任何修改。
+   要加新章节，往 QUOTE_SECTIONS 里再加一个 { title, items } 即可。
+   ========================================================================= */
+
+const QUOTE_SECTIONS = [
+
+  { title: "卷首 / 编者话", items: [
+    "人生没有绝对的失败，除非你不再尝试。 | There is no absolute failure in life unless you stop trying. — Anonymous",
+    "名言集和格言集是社会上最大的财宝——只要懂得在适当的场合把前者带进会话里，在适当的时间唤起对后者的记忆。——歌德 | Collections of famous sayings and aphorisms are the greatest treasure in society—if one knows how to bring the former into conversation on the right occasion and recall the latter at the right time. — Goethe"
+  ]},
+
+  { title: "一、人生", items: [
+    "人类生活中的虚荣浮华就像是一条河流，后浪推前浪，不断逝去，又不断涌来。 | Human vanity and ostentation in life are like a river: wave after wave, ever passing away and ever surging in. — Alexander Pope, Miscellanies",
+    "啊，人生，对痛苦的人来说，是漫长的岁月，对幸福的人是短暂的片刻。 | Ah, life—to the suffering it is long years; to the happy it is a brief moment. — Francis Bacon, The Light of Reason",
+    "人生最美好的，就是在你停止生存时，也还能以你所创造的一切为人们服务。 | The best thing in life is that when you cease to live, you can still serve people with all that you have created. — Nikolai Ostrovsky, Collected Works in Two Volumes",
+    "人生不是一种享乐，而是一桩十分沉重的工作。 | Life is not a pleasure, but a very heavy task. — Leo Tolstoy, Early Reminiscences",
+    "我的人生哲学是工作，我要揭示大自然的奥秘，并以此为人类造福。我们在世的短暂一生中，我不知道还有什么比这种服务更好的了。 | My philosophy of life is work: to reveal the mysteries of nature and thereby benefit mankind. In our brief life on earth, I know of no better service than this. — Thomas Edison, Guangming Daily",
+    "芸芸众生，谁不爱生？爱生之极，进而爱群。 | Among all living beings, who does not love life? When love of life reaches its height, it extends to love of the community. — Qiu Jin",
+    "世间的活动，缺点虽多，但仍是美好的。 | The activities of the world, though full of defects, are still beautiful. — Auguste Rodin, Rodin's Art",
+    "求乐的人生观，才是自然的人生观，真实的人生观。我们应该顺应自然，立在真实上，求得人生的光明，不可陷入勉强、虚伪的境界，把真正人生都归幻灭。 | The life view that seeks happiness is the natural and true view of life. We should follow nature, stand on reality, seek the light of life, and not fall into a forced and false state, reducing true life to illusion. — Li Dazhao, Selected Works of Li Dazhao",
+    "一个人思虑太多，就会失去做人的乐趣。 | If one thinks too much, one loses the joy of being human. — William Shakespeare, Complete Works",
+    "我要扼住命运的咽喉。它决不能使我完全屈服——噢！能把生命活上千百次该有多美！ | I will seize fate by the throat. It shall not completely subdue me—oh! how beautiful it would be to live life a thousand times! — Ludwig van Beethoven, Life of Beethoven",
+    "假如生活欺骗了你，不要忧郁，也不要愤慨！不顺心的时候暂且容忍：相信吧，快乐的日子就会到来。 | If life deceives you, do not be sad, do not be angry! In unhappy times, bear with it for now: believe that happy days will come. — Alexander Pushkin, Lyric Poems",
+    "没有人羡慕的人是无可羡慕的。 | He who is envied by no one is enviable in no way. — Aeschylus, Agamemnon",
+    "人到紧急关头就变得精力旺盛些……要是生活从头到尾满是紧急的时刻，要是人每秒钟都得为保住自己的脑袋而发抖……那么，生活就会活跃得多，人也会有趣得多呢。 | At a critical moment a person becomes more energetic... If life were full of critical moments from beginning to end, if one had to tremble every second to save one's head... then life would be much more lively, and people much more interesting. — Maxim Gorky, Creatures That Once Were Men",
+    "不要用悲伤的音符对我说，人生只是一个空虚的梦！因为沉睡的灵魂没有生命，一切事物并非像它们看来那样。 | Do not tell me in mournful notes that life is but an empty dream! For the soul that slumbers has no life, and things are not as they seem. — Henry Wadsworth Longfellow, A Psalm of Life",
+    "开门和关门是人生中含意最深的动作。在一扇扇门内，隐藏着何等样的奥秘！ | Opening and closing doors are the most meaningful actions in life. What mysteries lie hidden behind each door! — Christopher Morley, The Door",
+    "人生是使命。有关人生的其他定义全都谬误，把人们引入歧途。宗教、科学、哲学，尽管在许多方面观点不一，这一点却全都同意：每个人的生存就是目的。 | Life is a mission. All other definitions of life are false and lead people astray. Religion, science, and philosophy, though differing in many ways, all agree on this: each person's existence is an end in itself. — Giuseppe Mazzini, Life and Writings",
+    "人生是一场无休、无歇、无情的战斗，凡是要做个够得上称为人的人，都得时时刻刻向无形的敌人作战。 | Life is a ceaseless, tireless, ruthless battle; whoever would be worthy of the name of man must at every moment fight invisible enemies. — Romain Rolland, Jean-Christophe",
+    "一个人应当学会在短暂无常的事物中寻找那永久的成分；他在习惯上向来尊敬某些事物，如果它们一旦消灭了，他也应当学会忍受而不因此失去他的虔敬；他应当知道天生他这个人，并不是要他工作，而是要发掘他，他应当知道：虽然深渊之下还有深渊，一种意见会排斥另一种意见，然而最后一切都包含在那不朽的语句——如果我的小船沉没，它是到了另一个海上。 | A person should learn to seek the permanent element in transient things; he has habitually respected certain things, and if they perish, he should learn to endure without losing his reverence; he should know that he was born not to work but to be developed; he should know that though deep calls to deep and one opinion excludes another, in the end all is contained in that immortal sentence—If my bark sinks, 'tis to another sea. — Ralph Waldo Emerson, Montaigne; or, The Skeptic",
+    "生活是一出悲剧。在这悲剧中，我们先是冷眼旁观片刻，然后就扮演起自己的角色。 | Life is a tragedy. In this tragedy, we first watch coldly for a moment, then play our own roles. — Jonathan Swift, Thoughts",
+    "一个人只需要回想一下我们期望从生活中得到的一切，就可以明白它是多么陌生，就可以得出结论：我们已经误人其中，但并没有真正属于那个世界。 | One need only recall all that we expect from life to understand how strange it is, and to conclude: we have strayed into it, but do not truly belong to that world. — Italo Svevo, Confessions of Zeno",
+    "生活是由最不相干、最出乎意料、最自相矛盾、最胡拼乱凑的事情组合而成的；它是一连串残忍、专横、支离破碎、毫不联贯、逻辑混乱而又矛盾百出的灾难。 | Life is made up of the most unrelated, unexpected, self-contradictory, and haphazard things; it is a series of cruel, arbitrary, fragmentary, incoherent, logically chaotic, and contradictory disasters. — Guy de Maupassant, Pierre and Jean",
+    "生命苦短，但不幸却使它显得漫长。 | Life is short, but misfortune makes it seem long. — Publilius Syrus, Sententiae",
+    "成长是比死亡更为伟大的神秘。我们每个人都能理解失败，我们每个人的生命中都包含着失败和死亡；但是成长的愉悦与恐惧却难以识别，即使成功者在开始描绘给它们之前也会踌躇再三。 | Growth is a greater mystery than death. Each of us can understand failure; each of our lives contains failure and death; but the joy and terror of growth are hard to identify, and even the successful hesitate before beginning to describe them. — Norman Mailer, Advertisements for Myself",
+    "生活是一个走向厌倦的漫长过程。 | Life is a long process leading to weariness. — Samuel Butler, Notebooks",
+    "人生是实在的！人生是认真的！坟墓并非它的最终目标；你来自尘土，又回归尘土，这可不是指灵魂而说。 | Life is real! Life is earnest! The grave is not its goal; dust thou art, to dust returnest, was not spoken of the soul. — Henry Wadsworth Longfellow, A Psalm of Life",
+    "人生不过是一个行走的影子，一个在舞台上指手划脚的拙劣的伶人，登场片刻，就在无声无息中悄然退下。 | Life is but a walking shadow, a poor player who struts and frets his hour upon the stage, and then is heard no more. — William Shakespeare, Macbeth",
+    "人生是介于过去与未来之间的一瞬。 | Life is an instant between the past and the future. — Thomas Carlyle, On Heroes, Hero-Worship, and the Heroic in History",
+    "人人往往在回忆过去、抱怨现在和害怕未来中度过一生。 | People often spend their lives recalling the past, complaining of the present, and fearing the future. — Rivarol, Maxims and Thoughts",
+    "在人生的道路上，如此阴暗污浊，我艰难地走了三十三年；这些岁月给我留下的是什么？除了三十三以外，什么也没有。 | On the road of life, so dark and foul, I trudged for thirty-three years; what have these years left me? Nothing but thirty-three. — Lord Byron, Journal",
+    "你必汗流满面才得糊口，直到你归了土，因为你是从土而出的。你本是尘土，仍要归于尘土。 | In the sweat of thy face shalt thou eat bread, till thou return unto the ground; for out of it wast thou taken: for dust thou art, and unto dust shalt thou return. — Old Testament, Genesis",
+    "关于人生。总的来说，只有一条规律：青年时代是一个错误，成年时代是一场斗争，老年时代是一种遗憾。 | About life. On the whole, there is only one rule: youth is a mistake, adulthood a struggle, old age a regret. — Benjamin Disraeli",
+    "我们现在是什么样的人就做什么样的人，我们能成为什么样的人就成为什么样的人，这是人生的唯一目的。 | To be what we are, and to become what we are capable of becoming, is the only end of life. — Robert Louis Stevenson, Men and Books",
+    "人生总是不尽合理，而且往往充满痛苦，可是归根到底它仍然饶有趣味。 | Life is always unreasonable and often full of pain, but in the end it is still interesting. — H. L. Mencken, Trenton Sunday Times",
+    "一生过得最好的人是最充分享受生活的人。我们享受得是否过度，自有上帝掌握尺寸。 | He has lived best who has enjoyed life most fully. Whether we enjoy it too much is for God to measure. — Samuel Butler, The Way of All Flesh",
+    "我只知道人生有两种很真实的罪过：后悔和生病。唯一的好事是没有这两种罪过。 | I know only two very real evils in life: remorse and illness. The only good is to be free of both. — Leo Tolstoy, War and Peace",
+    "每一个人的生活都应该像河水一样——开始是细小的，被限制在狭窄的两岸之间，然后热烈地冲过巨石、滑下瀑布。渐渐地，河道变宽了，河岸扩展了，河水流得更平稳了。最后，河水流入了海洋，不再有明显的间断和停顿，而后便毫无痛苦地摆脱了自身的存在。 | An individual human existence should be like a river—small at first, narrowly contained within its banks, and rushing passionately past boulders and over waterfalls. Gradually the river grows wider, the banks recede, the waters flow more quietly, and in the end, without any visible break, they become merged in the sea, and painlessly lose their individual being. — Bertrand Russell, How to Grow Old",
+    "人生应以老年及其伴随它的特权和财富开始，以青春及其尽情享受这些好处的需求结束。 | Life should begin with old age and its privileges and riches, and end with youth and its need to enjoy these benefits to the full. — Mark Twain, Letter to Edward Dimitt",
+    "趁你活在人世，享受人间的一切。 | While you live in this world, enjoy all that is in it. — John Selden, Table-Talk",
+    "人生真是一个奇怪的东西。……活着就等于辛苦操劳，忍受各种痛苦，直到老年沉重地压在我们身上，我们把双手放在熄灭的火堆的冷灰上。 | Life is indeed a strange thing... To live is to toil and endure all kinds of pain, until old age presses heavily upon us and we lay our hands on the cold ashes of an extinguished fire. — Jack London, The Woman's Grit",
+    "生活是很艰难的。小娃娃吸第一口气的时候很痛苦，老年人喘最后一口气的时候也很痛苦，人生充满了不幸和痛苦；可是当他向死神怀抱里走去的时候，他还是很不情愿，颠颠簸簸，跌跌绊绊，回头看了看，一直挣扎到底。 | Life is very hard. The baby suffers when it draws its first breath, and the old man suffers when he gasps his last; life is full of misfortune and pain; yet when he goes toward the arms of death, he is still unwilling, staggering, stumbling, looking back, struggling to the end. — Jack London, The Woman's Grit",
+    "人生是艰苦的。在不甘于平庸风俗的人，那是一场无日无天的斗争，往往是悲惨的，没有光华的，没有幸福的，在孤独与静寂中展开的斗争。 | Life is hard. For those unwilling to accept mediocre customs, it is a ceaseless struggle, often tragic, without glory, without happiness, a struggle waged in loneliness and silence. — Romain Rolland, Beethoven",
+    "举凡人生，皆消耗殆尽于欲望和达到欲望这两者之间。 | All of life is consumed between desire and the attainment of desire. — Arthur Schopenhauer, The Suffering of the Will and Life",
+    "人生不是一个悲剧，就是一个喜剧。人们在悲剧中灭亡，但在喜剧中结为眷属。 | Life is either a tragedy or a comedy. In tragedy people perish, but in comedy they are united in marriage. — Hans Christian Andersen, The Porter's Son",
+    "人类哪，当灵魂懂得了它的使命以后，你能体会到在这清醒的片刻中所感到的幸福吗？在这片刻中，你在光荣的荆棘路上所得到的一切也会痊愈，恢复健康、力量和愉快；嘈音变成谐声；人们可以在一个人身上看到上帝的仁慈，而这仁慈通过一个人普及到大众。 | O mankind, when the soul understands its mission, can you feel the happiness of that clear moment? In that moment, all that you gained on the thorny road of honor is healed, restoring health, strength, and joy; noise becomes harmony; people can see God's mercy in one person, and through that person it spreads to all. — Hans Christian Andersen, The Thorny Road of Honor",
+    "我乘着快车从各个车站旁飞驰而过，连车站的名称都未能认出，一路上几乎自始至终都未弄清我在起点与终点之间的什么地方。当心，我想，不要在生活中也如此度过。 | I rushed past station after station in the express train, unable even to recognize their names, and almost from beginning to end never knew where I was between the starting point and the destination. Be careful, I thought, not to spend life in the same way. — Erwin Strittmatter, Thoughts",
+    "一生没有宴饮，就像一条长路没有旅店一样。 | A life without feasting is like a long road without an inn. — Democritus, Fragments",
+    "每个人的一生都是战役——多事多难的漫长战役。 | Every person's life is a battle—a long battle full of events and hardships. — Epictetus, Enchiridion",
+    "人生是战斗，也是过客暂时投宿的旅舍。 | Life is a battle, and also an inn where travelers temporarily lodge. — Marcus Aurelius, Meditations",
+    "胜利和眼泪！这就是人生！ | Victory and tears! This is life! — Honoré de Balzac, Gambara",
+    "人生不过是一个不断失掉我们心爱的人和事物的漫长过程。我们在身后留下一连串的悲哀。 | Life is but a long process of continually losing the people and things we love. We leave behind a trail of sorrows. — Victor Hugo, The Man Who Laughs",
+    "人生便是白昼与黑夜的斗争。 | Life is the struggle between day and night. — Victor Hugo, Life of Hugo",
+    "人生不过是过眼的烟云，是热情的火花喷出的黑烟，如此而已。 | Life is but smoke passing before the eyes, black smoke emitted by the sparks of passion, nothing more. — Victor Hugo, Selected Plays",
+    "人生是一场赌博，唯有聪明人才能赢；所以第一要看清敌人的牌，而不能泄露自己的牌。 | Life is a gamble; only the wise can win. So first see the enemy's cards clearly, and do not reveal your own. — Romain Rolland, Jean-Christophe",
+    "人生是一种惩罚或者考验。 | Life is a punishment or a trial. — August Strindberg, Selected Plays",
+    "在时间的长河里，一直能让自己不下沉，脚也不沾湿，这就是人生。 | In the long river of time, to keep oneself from sinking and keep one's feet from getting wet—that is life. — Henrik Ibsen, Peer Gynt",
+    "人生是个沉重的负担，是一场梦，前途的尽头是一堆黄土。 | Life is a heavy burden, a dream, and at the end of the road a heap of yellow earth. — Mark Twain, The Gilded Age",
+    "人生宛若庆祝节日或从事送葬的行列，人人各就其位，在司仪长的指挥下前进。 | Life is like a procession celebrating a festival or conducting a funeral; each person takes his place and moves on under the direction of the master of ceremonies. — Nathaniel Hawthorne, The Procession of Life",
+    "人生，是两个永恒间留下的空隙，是两块黑暗间激发闪光的瞬息。 | Life is the gap left between two eternities, the flashing instant between two darknesses. — Ameen Rihani, The Book of Khalid",
+    "顺境也好，逆境也好，人生就是一场对种种困难的无尽无休的斗争，一场以寡敌众的斗争。 | In prosperity or adversity, life is an endless struggle against all kinds of difficulties, a struggle of the few against the many. — Rabindranath Tagore, The Wreck",
+    "人生一世，总有些片段当时看着无关紧要，而事实上却牵动了大局。 | In one's life, there are always episodes that seem insignificant at the time but in fact affect the whole situation. — William Makepeace Thackeray, Vanity Fair",
+    "人生好比两瓶必要喝的啤酒，一瓶是甜蜜的，一瓶是酸苦的，先喝了甜蜜的，其后必然是酸苦。 | Life is like two bottles of beer that must be drunk: one sweet, one bitter. If you drink the sweet first, the bitter must follow. — George Bernard Shaw, Sixty Years of Autobiography",
+    "人生从来不像意想中那么好，也不像意想中那么坏。 | Life is never as good as one imagines, nor as bad as one imagines. — Guy de Maupassant, A Life",
+    "人生不出售来回票。一旦动身，绝不能复返。 | Life sells no round-trip tickets. Once you set out, you can never return. — Romain Rolland, The Enchanted Soul",
+    "在人生中，各有各的角色。 | In life, each has his own role. — Romain Rolland, Jean-Christophe",
+    "人生道路上的奥秘，不会而且也无法被揭示出来。在罪恶的岩石上每一个旅行者都不免要摔跤。 | The mysteries on the road of life will not and cannot be revealed. On the rocks of sin every traveler is bound to stumble. — Johann Wolfgang von Goethe, Maxims and Reflections",
+    "人生充满着奇怪的奥秘。 | Life is full of strange mysteries. — Ivan Turgenev, Andrei Kolosov",
+    "人生里面有些瞬间，也有些情感……那是我们只能意会，却不可以言传的。 | There are moments and feelings in life... that we can only apprehend, not express. — Ivan Turgenev, A Nest of Gentlefolk",
+    "人生在世不会总是一帆风顺和美妙动人的。 | Life in this world will not always be smooth and wonderful. — Vasily Sukhomlinsky, Letters to My Son",
+    "人生在世，绝不能事事如意。 | In this world, one can never have everything go as one wishes. — Mark Twain, A Connecticut Yankee in King Arthur's Court",
+    "人生的道路就像一条大河，由于急流本身的冲击力，在从前没有水流的地方，冲刷出崭新的意料不到的河道。 | The road of life is like a great river: by the force of its own rapid current, it cuts new and unexpected channels where no water flowed before. — Rabindranath Tagore, Gora",
+    "人生也许是场马拉松赛跑，奔跑在途中的名次不算数。只有达到终点，前胸触到拦带，才是定局。 | Life may be a marathon; one's ranking along the way does not count. Only when one reaches the finish and one's chest touches the tape is it settled. — Daisaku Ikeda, Youth Message",
+    "人有悲欢离合，月有阴晴圆缺，此事古难全。 | People have sorrow and joy, parting and reunion; the moon has days of brightness and darkness, waxing and waning. This has been imperfect since ancient times. — Su Shi, Prelude to Water Melody: Mid-Autumn",
+    "若将世路比山路，世路更多千万盘。 | If the world's road is compared to a mountain road, the world's road has a thousand and ten thousand more turns. — Fan Chengda, Forty-Eight Bends",
+    "人生读来几乎像一首诗。它有自己的韵律和节奏，也有生长和腐坏的内在周期。 | Life reads almost like a poem. It has its own rhyme and rhythm, and an inner cycle of growth and decay. — Lin Yutang, Life Is Like a Poem",
+    "人生就像解方程，运算的每一步似乎都无关大局，但对最终求解都是必要的。 | Life is like solving an equation: each step in the operation seems irrelevant to the whole, but is necessary for the final solution. — Feng Ding, Adversity Is Always There; Life Is an Attack",
+    "船在水上，不停地遇到风浪。人在世上，会不断地遇到困难。 | A boat on water constantly meets wind and waves. A person in the world constantly meets difficulties. — Ke Lan, Morning Glow Piccolo: A Boat on Water",
+    "我常把人生比做一次旅行，辛劳和苦难算做是我们所不能不花的旅费。 | I often compare life to a journey, in which toil and suffering are the unavoidable travel expenses. — Romain Rolland, Roland's Little Sayings",
+    "若是人在活着的时候主要的长处与价值只是吃饭同睡觉——一个畜生。如此而已！ | If a person's main virtue and value while alive is merely eating and sleeping—then he is a beast. That is all! — William Shakespeare, Hamlet",
+    "人生意义的大小，不在乎外界的变迁，而在乎内心的经验。 | The significance of life lies not in external changes, but in inner experience. — Thomas Hardy, Tess of the d'Urbervilles",
+    "人生里有价值的事，并不是人生的美丽，却是人生的酸苦。 | What is valuable in life is not its beauty, but its bitterness. — Thomas Hardy, Tess of the d'Urbervilles",
+    "人生是非常短暂的，但是如果只注意到其短暂，那就连一点价值都没了。 | Life is very brief, but if one notices only its brevity, then it loses all value. — Vauvenargues, Reflections and Maxims",
+    "没有意义的人生等于提前死亡。 | A life without meaning is equal to premature death. — Romain Rolland, Memoirs",
+    "你若要喜欢你自己的价值，你就得给世界创造价值。 | If you would like your own value, you must create value for the world. — Johann Wolfgang von Goethe, Maxims in Verse",
+    "所谓人生就是一场梦幻，唯有贤明的人才能做出美梦。 | So-called life is a dream; only the wise can dream a beautiful dream. — Friedrich Schiller, Fiesco's Conspiracy",
+    "人生的价值，并不是用时间，而是用深度去衡量。 | The value of life is measured not by time, but by depth. — Leo Tolstoy, Last Diaries",
+    "感到自己是人们所需要的和亲近的人——这是人生中最大的享受，最高的喜悦。 | To feel that one is needed and close to people—this is the greatest enjoyment and highest joy in life. — Maxim Gorky, On Children's Literature",
+    "平庸的生活使人感到一生不幸，波澜万丈的人生才能使人感到生存的意义。 | A mediocre life makes one feel unfortunate all one's life; only a life of great waves can make one feel the meaning of existence. — Daisaku Ikeda, Words for Women",
+    "生要有益于世，为天地间不可少之人，死要有传于后，为千万世重有赖之士，方不负此七尺之躯，不至碌碌与草木同朽。 | In life one should benefit the world and be a person indispensable between heaven and earth; in death one should leave something for posterity and be one on whom countless generations rely. Only then is one worthy of this seven-foot body, and not merely busy and unknown, decaying with the grass and trees. — Zhang Boxing, Collected Records of Learning in Hardship",
+    "人生最有趣味的事情，就是送旧迎新，因为人类最高的欲求，是在时时刻刻创造新生活。 | The most interesting thing in life is to bid farewell to the old and welcome the new, because humanity's highest desire is to create new life at every moment. — Li Dazhao, Selected Works of Li Dazhao",
+    "人生本身就是无数的冒险元素组成的，冒险多了，人生经验丰富了，人生也变得多彩。 | Life itself is composed of countless elements of adventure; with more adventures, life experience becomes richer, and life becomes more colorful. — Yan Huo, Journey Through Wind and Rain",
+    "人生的价值，即以其人对于当时代所做的工作为尺度。 | The value of life is measured by the work a person does for his own time. — Xu Wei, Testament",
+    "所谓高质量人生，其实就是平衡不断遭到破坏和重建。 | So-called high-quality life is simply balance constantly being destroyed and rebuilt. — Zhao Xinshan, Philosophy and the Contemporary World",
+    "别人为食而生存，我为生存而食。 | Others live in order to eat; I eat in order to live. — Socrates, Apology",
+    "如果我不尽力重新按照自己的意愿去生存的话，我总觉得活着是很荒谬的事。 | If I do not try my best to live according to my own will, I always feel that living is absurd. — Jean-Paul Sartre, The Age of Reason",
+    "人的生存目的还在于把人周围的一切弄得更合乎道德，从而使人本身日益幸福。 | The purpose of human existence is also to make everything around man more moral, and thereby make man himself increasingly happy. — Johann Gottlieb Fichte, On the Vocation of the Scholar",
+    "人生并不是以金钱为对象，因为我们的对象是人群。 | Life does not take money as its object, for our object is people. — Alexander Pushkin, The Storm",
+    "如果没有任何目的，如果我们只是为了活而活着，那活着大可不必。 | If there is no purpose at all, if we live merely in order to live, then there is no need to live. — Leo Tolstoy, The Kreutzer Sonata",
+    "人活一辈子都要建设人生。失掉建设的人生，没有不跨台的。 | Throughout one's life one must build life. A life without building will inevitably collapse. — Daisaku Ikeda, Youth Message",
+    "人生的目的，在发展自己的生命，可是也有为发展生命必须牺牲生命的时候。 | The purpose of life is to develop one's own life, but there are also times when life must be sacrificed in order to develop life. — Li Dazhao, Sacrifice",
+    "回忆往日，从中得乐，等于活了两次人生。 | To recall past days and take joy in them is to live life twice. — Martial, Epigrams",
+    "思考于清晨，行动于白昼，饱食于日暮，就寝于夜晚——如此人生，不亦乐乎。 | Think in the morning, act at noon, eat in the evening, sleep at night—such a life, is it not delightful? — William Blake, Proverbs of Hell",
+    "如果容许我再过一次人生，我愿意重复我的生活。因为，我向来就不后悔过去，不怕惧将来。 | If I were allowed to live my life again, I would willingly repeat it. For I have never regretted the past nor feared the future. — Michel de Montaigne, Essays",
+    "在人生的大风浪中，我们常常学船长的样，在狂风暴雨之下把笨重的货物扔掉，以减轻船的重量。 | In the great storms of life, we often imitate the captain and throw overboard the heavy cargo in the tempest, to lighten the ship. — Honoré de Balzac, Cousin Bette",
+    "人生真美好。看你戴什么眼镜去看。 | Life is truly beautiful. It depends on the glasses through which you look at it. — Alexandre Dumas fils, The Lady of the Camellias",
+    "人生第一要尽本分。 | The first thing in life is to do one's duty. — Romain Rolland, Jean-Christophe",
+    "人生第一应尽的责任是让人家觉得生活可爱。 | The first duty in life is to make others feel that life is lovable. — Romain Rolland, Jean-Christophe",
+    "人生一世不就是为了化短暂的事物为永久的吗？要做到这一步，就须懂得如何珍惜这短暂和永久。 | Is not the whole of life to turn transient things into eternal ones? To do this, one must know how to cherish both the transient and the eternal. — Johann Wolfgang von Goethe, Maxims and Reflections",
+    "尽管有死这个事实，但还是应该不能不活，不能不爱。 | Despite the fact of death, one still must live and must love. — Leo Tolstoy, Anna Karenina",
+    "人生至要之事是发现自己，所以有必要偶尔与孤独、沉思为伍。 | The most important thing in life is to discover oneself, so it is necessary occasionally to keep company with solitude and reflection. — Fridtjof Nansen, Diary",
+    "人生如棋局，精于预测者必握胜机。 | Life is like a chess game; he who is skilled at prediction will grasp the chance of victory. — Buxton, Essays",
+    "我们不能逃避人生。 | We cannot escape life. — Mark Twain, Autobiography",
+    "我们要努力把一生好好地度过，等到死的时候，那就连殡仪馆的老板也会感到惋惜。 | We should strive to live our lives well, so that when we die, even the undertaker will feel regret. — Mark Twain, Pudd'nhead Wilson",
+    "头脑清醒的人总是深切地体会到人生是一种冒险，生命永远必须从死亡中去夺取。 | A clear-headed person always deeply realizes that life is an adventure, and that life must always be wrested from death. — Albert Einstein, The Ten Fateful Years",
+    "天地有万古，此身不再得；人生只百年，此日最易过。幸生其间者，不可不知有生之乐，亦不可不怀虚生之忧。 | Heaven and earth endure for ages, but this body will not be obtained again; human life lasts only a hundred years, and this day passes most easily. Those fortunate enough to live in between cannot but know the joy of life, and cannot but harbor the worry of wasting life. — Hong Yingming, Caigentan",
+    "只赶路而不玩赏和只劳动而不思想是同样的辛劳而没有意义。 | To hurry on the road without enjoying it is as toilsome and meaningless as to labor without thinking. — Romain Rolland, Roland's Little Sayings",
+    "用快乐与赞美、积极而负责的心情去面对世界，我们的人生才会显出它真正的意义。 | Only when we face the world with joy, praise, and an active and responsible heart will our lives reveal their true meaning. — Romain Rolland, Roland's Little Sayings",
+    "人生是各种不同的变故，循环不已的痛苦和欢乐组成的。……那种永远不变的蓝天只存在于心灵中间，向现实的人生去要求未免是奢望。 | Life is composed of various changes, of endlessly recurring pain and joy... That eternally unchanging blue sky exists only in the heart; to demand it from real life is perhaps too much to ask. — Honoré de Balzac, Honorine",
+    "为了解人生有多么短暂，一个人必须走过漫长的生活道路。 | To understand how brief life is, one must walk a long road of life. — Arthur Schopenhauer, Parerga and Paralipomena: On the Different Stages of Life",
+    "要是已经活过来的那一段人生，只是个草稿，另有一段誉写的人生，该有多好。 | If only the life already lived were merely a draft, and there were another life to be copied fair, how good it would be. — Anton Chekhov, Three Sisters",
+    "人生，处处地方都有毒蛇在引诱我们。 | In life, poisonous snakes lure us everywhere. — Mark Twain, The Innocents Abroad",
+    "人若把一生的光阴虚度，便是抛下黄金未买一物。 | If one wastes one's whole life, it is like throwing away gold and buying nothing. — Saadi, Gulistan",
+    "冷淡猜疑毁坏友谊，粗卤愚蠢毁坏幸福，久客不归毁坏爱情，酗酒毁坏羞恶之心，粗心大意毁坏田地，好施舍不勤勉把财产花光。 | Coldness and suspicion ruin friendship; rudeness and folly ruin happiness; long absence from home ruins love; drunkenness ruins the sense of shame; carelessness ruins the fields; excessive almsgiving without diligence exhausts one's property. — Panchatantra",
+    "没有希望的人生不算人生，没有未来的人生最空虚。 | A life without hope is not life; a life without a future is the emptiest of all. — Daisaku Ikeda, Youth Message"
+  ]}
+
+];
+
+const ALL_QUOTES = [];
+QUOTE_SECTIONS.forEach(function(sec){
+  sec.items.forEach(function(q){ ALL_QUOTES.push({ section: sec.title, raw: q }); });
+});
+
+// 一条名言形如「中文 | English — 出处」。
+// 用第一个「 | 」切中外，再用最后一个「 — 」切出处。
+// 出处前的破折号两侧必须有空格，这样正文里的 society—if / river—small 不会误伤。
+function splitQuote(raw){
+  const s = String(raw == null ? '' : raw);
+  const bar = s.indexOf(' | ');
+  if (bar < 0) return { zh: s.trim(), en: '', from: '' };
+
+  const zh = s.slice(0, bar).trim();
+  let rest = s.slice(bar + 3).trim();
+  let from = '';
+  const dash = rest.lastIndexOf(' — ');
+  if (dash >= 0){
+    from = rest.slice(dash + 3).trim();
+    rest = rest.slice(0, dash).trim();
+  }
+  return { zh: zh, en: rest, from: from };
+}
+
+let QUOTE_CURRENT = null;
+function pickQuote(){
+  if (!ALL_QUOTES.length){ QUOTE_CURRENT = null; return; }
+  let next = QUOTE_CURRENT, guard = 0;
+  while (next === QUOTE_CURRENT && guard++ < 40){
+    next = ALL_QUOTES[Math.floor(Math.random() * ALL_QUOTES.length)];
+  }
+  QUOTE_CURRENT = next;
+}
+
+let FAM_CURRENT = null;
+
+// 随机挑一位，并且避免和上一位重复 —— 真随机很容易连续抽到同一个，
+// 那样会让你以为"没刷新"。名言跟着角色一起刷新。
+function pickFamily(){
+  if (!FAMILY.length){
+    FAM_CURRENT = null;
+  } else if (FAMILY.length === 1){
+    FAM_CURRENT = FAMILY[0];
+  } else {
+    let next = FAM_CURRENT, guard = 0;
+    while (next === FAM_CURRENT && guard++ < 40){
+      next = FAMILY[Math.floor(Math.random() * FAMILY.length)];
+    }
+    FAM_CURRENT = next;
+  }
+  pickQuote();
+}
+
+/* =========================================================================
+   名言朗读：用浏览器自带的语音合成，不需要任何音频文件
+   -------------------------------------------------------------------------
+   中文走 zh-CN、英文走 en-US，两个喇叭分开点。
+   再点一次同一个喇叭 = 停止；切换页面 / 换一条名言也会自动停。
+   ========================================================================= */
+
+const SPEECH_OK = (typeof window !== 'undefined' &&
+                   'speechSynthesis' in window &&
+                   typeof window.SpeechSynthesisUtterance === 'function');
+
+let SPEAKING_EL = null;
+let SPEAK_AUDIO  = null;     // 豆包音色播的是 <audio>，不是 speechSynthesis
+
+function stopSpeak(){
+  if (SPEECH_OK){ try { window.speechSynthesis.cancel(); } catch (e) {} }
+  if (SPEAK_AUDIO){
+    try { SPEAK_AUDIO.pause(); } catch (e) {}
+    SPEAK_AUDIO = null;
+  }
+  if (SPEAKING_EL){
+    SPEAKING_EL.classList.remove('speaking');
+    SPEAKING_EL = null;
+  }
+}
+
+// 尽量挑一个和目标语言匹配的系统语音
+function pickVoice(lang){
+  if (!SPEECH_OK) return null;
+  let list = [];
+  try { list = window.speechSynthesis.getVoices() || []; } catch (e) { return null; }
+  const want = String(lang || '').toLowerCase().slice(0, 2);
+  let fallback = null;
+  for (let i = 0; i < list.length; i++){
+    const l = String(list[i].lang || '').toLowerCase().replace('_', '-');
+    if (l.indexOf(want) !== 0) continue;
+    if (!fallback) fallback = list[i];
+    if (want === 'zh' && /^zh-(cn|hans)/.test(l)) return list[i];
+    if (want === 'en' && /^en-(us|gb)/.test(l))  return list[i];
+  }
+  return fallback;
+}
+
+function stopSpeak(){
+  if (!SPEECH_OK) return;
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  if (SPEAKING_EL){
+    SPEAKING_EL.classList.remove('speaking');
+    SPEAKING_EL = null;
+  }
+}
+
+// 用系统内置语音读。t 已经 trim 过、也确认非空。
+function browserSpeak(el, t, lang){
+  if (!SPEECH_OK){
+    toast('这个浏览器不支持语音朗读。\n（Chrome / Edge 可以，某些精简版不行）', 'err');
+    return;
+  }
+
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang  = lang || 'zh-CN';
+  u.rate  = 0.95;
+  u.pitch = 1;
+  const v = pickVoice(u.lang);
+  if (v) u.voice = v;
+  u.onend   = stopSpeak;
+  u.onerror = stopSpeak;
+
+  try {
+    window.speechSynthesis.speak(u);
+  } catch (e){
+    toast('朗读失败：' + (e && e.message ? e.message : String(e)), 'err');
+    return;
+  }
+  el.classList.add('speaking');
+  SPEAKING_EL = el;
+
+  // 系统里没装对应语音包时会「静默失败」—— 一点声音都没有，看起来像坏了。
+  // 1.2 秒后还没开口就提示一下，顺便告诉去哪儿装。
+  setTimeout(function(){
+    if (SPEAKING_EL !== el) return;                 // 已经结束或换了别的
+    let busy = false;
+    try { busy = window.speechSynthesis.speaking || window.speechSynthesis.pending; } catch (e) {}
+    if (busy) return;
+    stopSpeak();
+    const isZh = String(u.lang).toLowerCase().indexOf('zh') === 0;
+    toast('没听到声音？系统里可能没装「' + (isZh ? '中文' : '英文') + '」语音包。\n'
+        + 'Windows：设置 → 时间和语言 → 语音 → 添加语音\n'
+        + '装完刷新一下本页再试。', 'err');
+  }, 1200);
+}
+
+// 有些浏览器第一次 getVoices() 返回空，等它加载完再预热一次
+if (SPEECH_OK){
+  try {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.addEventListener('voiceschanged', function(){
+      try { window.speechSynthesis.getVoices(); } catch (e) {}
+    });
+  } catch (e) {}
+}
+
+/* ---------- 豆包音色（火山引擎语音合成）---------- */
+
+// 常用音色速查。完整列表（200+）见火山引擎「音色查询」文档，
+// 直接把 voice_type 粘进设置里的输入框也行。
+const TTS_VOICES = [
+  { id:'zh_female_shuangkuaisisi_uranus_bigtts',   name:'爽快思思（女·中）' },
+  { id:'zh_female_xiaohe_uranus_bigtts',           name:'小何（女·中）' },
+  { id:'zh_female_vv_uranus_bigtts',               name:'Vivi（女·中，支持方言）' },
+  { id:'zh_female_linjianvhai_uranus_bigtts',      name:'邻家女孩（女·中）' },
+  { id:'zh_female_tianmeixiaoyuan_uranus_bigtts',  name:'甜美小源（女·中）' },
+  { id:'zh_female_gaolengyujie_uranus_bigtts',     name:'高冷御姐（女·中）' },
+  { id:'zh_female_zhixingnv_uranus_bigtts',        name:'知性女声（女·中）' },
+  { id:'zh_female_wenroushunv_uranus_bigtts',      name:'温柔淑女（女·中）' },
+  { id:'zh_female_qingxinnvsheng_uranus_bigtts',   name:'清新女声（女·中）' },
+  { id:'zh_male_yangguangqingnian_uranus_bigtts',  name:'阳光青年（男·中）' },
+  { id:'zh_male_ruyaqingnian_uranus_bigtts',       name:'儒雅青年（男·中）' },
+  { id:'zh_male_shenyeboke_uranus_bigtts',         name:'深夜播客（男·中，适合念名言）' },
+  { id:'zh_male_cixingjieshuonan_uranus_bigtts',   name:'磁性解说男声（男·中）' },
+  { id:'zh_male_m191_uranus_bigtts',               name:'云舟（男·中）' },
+  { id:'zh_female_wanqudashu_moon_bigtts',         name:'弯曲大树（女·中·1.0 代）' },
+  { id:'zh_male_beijingxiaoye_emo_v2_mars_bigtts', name:'北京小爷（男·中·1.0 代）' },
+  { id:'ICL_uranus_en_female_charlie_tob',         name:'Charlie（女·美式英语）' },
+  { id:'ICL_uranus_en_male_ethan_tob',             name:'Ethan（男·澳洲英语）' },
+  { id:'ICL_uranus_en_male_alastor_tob',           name:'Alastor（男·英式英语）' },
+  { id:'ICL_uranus_en_male_noah_tob',              name:'Noah（男·美式英语）' },
+  { id:'zh_female_yingyujiaoxue_uranus_bigtts',    name:'Tina 老师（中 / 英式英语）' }
+];
+
+function voiceDatalistHtml(){
+  return '<datalist id="ttsVoices">'
+       + TTS_VOICES.map(function(v){
+           return '<option value="'+attr(v.id)+'">'+esc(v.name)+'</option>';
+         }).join('')
+       + '</datalist>';
+}
+
+function ttsReqId(){
+  try { if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID(); }
+  catch (e) {}
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+// 代理根地址：baseUrl 形如 http://127.0.0.1:8787/v1，去掉末尾的 /v1
+function aiProxyBase(){
+  return String(AI_CFG.baseUrl || '').replace(/\/+$/, '').replace(/\/v1$/, '');
+}
+
+// 走本地代理转发到 openspeech.bytedance.com —— 它不允许浏览器跨域。
+// 代理只转发，token 由这里带过去，服务端不留副本。
+async function doubaoSpeak(text, lang){
+  const appid = String(AI_CFG.ttsAppId || '').trim();
+  const token = String(AI_CFG.ttsToken || '').trim();
+  if (!appid || !token) throw new Error('还没填豆包的 AppID / Access Token（点「⚙️ AI 设置」）');
+
+  const isZh  = String(lang || 'zh-CN').toLowerCase().indexOf('zh') === 0;
+  const voice = String((isZh ? AI_CFG.ttsVoiceZh : AI_CFG.ttsVoiceEn) || AI_CFG.ttsVoiceZh).trim();
+
+  const body = {
+    app:     { appid: appid, token: token, cluster: String(AI_CFG.ttsCluster || 'volcano_tts').trim() },
+    user:    { uid: 'diary-web' },
+    audio:   { voice_type: voice, encoding: 'mp3', speed_ratio: Number(AI_CFG.ttsSpeed) || 1 },
+    request: { reqid: ttsReqId(), text: text, text_type: 'plain', operation: 'query' }
+  };
+
+  // 注意 Authorization 用的是分号：Bearer;{token}。写成空格会一直鉴权失败。
+  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer;' + token };
+  const rid = String(AI_CFG.ttsResourceId || '').trim();
+  if (rid) headers['X-Api-Resource-Id'] = rid;
+
+  let res;
+  try {
+    res = await fetch(aiProxyBase() + '/tts', {
+      method: 'POST', headers: headers, body: JSON.stringify(body)
+    });
+  } catch (e){
+    throw new Error('连不上本地代理 ' + aiProxyBase() + '/tts\n'
+      + '先确认「启动日记本.bat」开的那个代理窗口还在跑。');
+  }
+
+  const raw = await res.text();
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e){ throw new Error('返回的不是 JSON（HTTP ' + res.status + '）：\n' + raw.slice(0, 200)); }
+
+  if (data.code !== 3000 || !data.data){
+    let hint = '';
+    if (data.code === 55000000)
+      hint = '\n（55000000 = 音色代次和 resource-id 对不上：「音色代次」那栏要填 seed-tts-2.0 或 volc.service_type.10029）';
+    else if (data.code === 3001 || data.code === 3003)
+      hint = '\n（鉴权失败：核对 AppID / Access Token；Authorization 头用的是分号 "Bearer;token"）';
+    throw new Error('豆包 TTS 返回 code=' + data.code + '\n' + (data.message || '(没有 message)') + hint);
+  }
+  return 'data:audio/mp3;base64,' + data.data;
+}
+
+// 两个喇叭都走这里：按设置决定用系统语音还是豆包音色
+function speakText(el, text, lang){
+  const t = String(text || '').trim();
+  if (!t) return;
+
+  const wasPlaying = (SPEAKING_EL === el);
+  stopSpeak();
+  if (wasPlaying) return;              // 再点一次 = 停
+
+  if (AI_CFG.ttsProvider !== 'doubao'){
+    browserSpeak(el, t, lang);
+    return;
+  }
+
+  SPEAKING_EL = el;
+  el.classList.add('speaking');
+
+  doubaoSpeak(t, lang).then(function(url){
+    if (SPEAKING_EL !== el) return;    // 等待期间被停掉或换了别的
+    const a = new Audio(url);
+    SPEAK_AUDIO = a;
+    a.onended = stopSpeak;
+    a.onerror = function(){ stopSpeak(); toast('豆包音频播放失败。', 'err'); };
+    const p = a.play();
+    if (p && p.catch) p.catch(function(err){
+      stopSpeak();
+      toast('浏览器拦了自动播放，再点一次喇叭试试。\n'
+          + (err && err.message ? err.message : ''), 'err');
+    });
+  }).catch(function(e){
+    stopSpeak();
+    toast('豆包音色失败，已回退到系统语音。\n' + (e && e.message ? e.message : String(e)), 'err');
+    browserSpeak(el, t, lang);         // 回退，至少还能听见
+  });
+}
+
+function familyCornerHtml(){
+  const f = FAM_CURRENT || FAMILY[0];
+  const q = QUOTE_CURRENT || ALL_QUOTES[0];
+  const p = q ? splitQuote(q.raw) : { zh:'', en:'', from:'' };
+  const full = [p.zh, p.en, p.from ? '— ' + p.from : ''].filter(Boolean).join('\n');
+  const spkCls = SPEECH_OK ? 'fc-spk' : 'fc-spk unsupported';
+
+  return '<div class="fam-corner" id="famCorner" style="--fam:'+attr(f.color)+'">'
+       +   '<div class="fc-solo">'
+       +     famAvatar(f, f.name + (p.zh ? '：' + p.zh : ''))
+       +     '<span class="fc-tx">'
+       +       '<b>'+esc(f.name)+'<small>'+esc(f.en)+'</small></b>'
+       +       '<span class="fc-body" data-famquote title="'+attr(full)+'">'
+       +         '<span class="fc-row">'
+       +           '<span class="'+spkCls+'" data-say="'+attr(p.zh)+'" data-lang="zh-CN"'
+       +             ' title="朗读中文">🔊</span>'
+       +           '<span class="fc-desc fc-quote">'+esc(p.zh)+'</span>'
+       +         '</span>'
+       +         (p.en
+              ? '<span class="fc-row">'
+              +   '<span class="'+spkCls+'" data-say="'+attr(p.en)+'" data-lang="en-US"'
+              +     ' title="Read the English aloud">🔊</span>'
+              +   '<span class="fc-en">'+esc(p.en)+'</span>'
+              + '</span>'
+              : '')
+       +       '</span>'
+       +       (p.from ? '<span class="fc-from">— '+esc(p.from)+'</span>' : '')
+       +       '<span class="fc-roll" data-famroll>🎲 换一个（角色 + 名言）</span>'
+       +     '</span>'
+       +   '</div>'
+       + '</div>';
+}
+
+// 非页面视图：挂到 main 最顶端
+// 页面视图不走这里 —— renderPageView 已经把角色放进两栏头部的右栏了。
+// 这里必须提前返回，否则会把刚渲染好的那个又删掉。
+function mountFamilyCorner(){
+  if (state.view === 'selftest' || state.view === 'page') return;
+  const old = document.getElementById('famCorner');
+  if (old) old.remove();
+  if (!FAM_CURRENT) pickFamily();
+  $main.insertAdjacentHTML('afterbegin', familyCornerHtml());
+}
+
+/* ---------- AI 工作台（独立页面） ---------- */
+
+let AI_VIEW = { status:'', input:'', output:'' };
+
+function setAIStatus(text){
+  AI_VIEW.status = text;
+  const el = document.getElementById('aiViewStatus');
+  if (el) el.textContent = text;
+}
+
+function copyText(text){
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).catch(function(){});
+    return;
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+}
+
+function renderAIView(){
+  let html = '<h1>🪄 AI 整理</h1>';
+  html += '<div class="meta">'
+        + '<span>接口：' + esc(aiEndpoint()) + '</span>'
+        + '<span>模型：' + esc(AI_CFG.model) + '</span>'
+        + '<span>思考模式：' + (AI_CFG.thinking ? '开启' : '关闭') + '</span>'
+        + '</div>';
+
+  html += '<div class="ai-panel"><h4>连接</h4>'
+        +   '<div class="ai-row" style="margin-top:0">'
+        +     '<button class="primary" id="btnAITestView">🔌 测试连接</button>'
+        +     '<button id="btnAICfgView">⚙️ 修改设置</button>'
+        +     (state.path ? '<button id="btnAILoadPage">📥 载入当前页面</button>' : '')
+        +   '</div>'
+        +   '<div class="ai-msg">先跑一次「测试连接」。它不花钱，但能确认代理、Key、模型名都对。</div>'
+        +   '<div id="aiPanel"></div>'
+        + '</div>';
+
+  html += '<div class="ai-panel"><h4>① 把乱七八糟的文字贴进来</h4>'
+        +   '<textarea class="ai-out" id="aiInput" placeholder="随便写。错别字、口水话、没头没尾都没关系 —— 越乱越能看出整理效果。"></textarea>'
+        +   '<div class="ai-row"><button class="primary" id="btnAIViewRun">🪄 开始整理</button>'
+        +     '<span class="ai-msg" style="margin-top:0">通常 3–15 秒</span></div>'
+        + '</div>';
+
+  html += '<div class="ai-panel"><h4>② 整理结果</h4>'
+        +   '<textarea class="ai-out" id="aiOutput" placeholder="结果会出现在这里"></textarea>'
+        +   '<div class="ai-row">'
+        +     '<button id="btnAICopyOut">📋 复制结果</button>'
+        +     (state.path ? '<button class="primary" id="btnAIToPage">➕ 追加到当前页面末尾</button>' : '')
+        +   '</div>'
+        +   '<div class="ai-msg">结果只显示在这里，不会自动写进你的文件。</div>'
+        + '</div>';
+
+  html += '<div class="ai-msg" id="aiViewStatus">'
+        + esc(AI_VIEW.status || '还没测试过。')
+        + '</div>';
+
+  $main.innerHTML = html;
+
+  const inp = document.getElementById('aiInput');
+  if (inp) inp.value = AI_VIEW.input;
+  const out = document.getElementById('aiOutput');
+  if (out) out.value = AI_VIEW.output;
+
+  paintAIPanel();
+}
+
+async function runAIView(){
+  const inp = document.getElementById('aiInput');
+  const out = document.getElementById('aiOutput');
+  if (!inp) return;
+  const src = inp.value.trim();
+  AI_VIEW.input = inp.value;
+
+  if (!src){ setAIStatus('先在 ① 里写点东西。'); return; }
+
+  if (out) out.value = '';
+  setAIStatus('正在整理……（代理窗口会打印 -> POST 和 <- 状态码）');
+
+  try {
+    const r = stripFence(await aiChat([
+      { role:'system', content: AI_SYSTEM_PROMPT },
+      { role:'user',   content: src }
+    ]));
+    AI_VIEW.output = r;
+    const o = document.getElementById('aiOutput');
+    if (o) o.value = r;
+    setAIStatus('✅ 整理完成。核对一下再写回页面 —— 重要内容建议自己再扫一遍。');
+  } catch (e){
+    setAIStatus('❌ ' + (e && e.message ? e.message : String(e))
+      + (e && e.hint ? '\n' + e.hint : ''));
+  }
+}
+
+/* ---------- 日历 ---------- */
+
+const DOW = ['日','一','二','三','四','五','六'];
+
+// 新建日记时给的骨架，和模板页保持同一套小标题
+const NEW_JOURNAL_SKELETON =
+  '- ## 今天做了什么\n  - \n' +
+  '- ## 工作和进展\n  - \n' +
+  '- ## 感受 / 状态\n  - \n' +
+  '- ## 明天要做\n  - \n';
+
+let CAL = null;
+function calInit(){
+  if (!CAL) CAL = { year: TODAY.getFullYear(), month: TODAY.getMonth() + 1 };
+}
+
+// 日期(YYYY-MM-DD) -> 日记文件路径
+function journalMap(){
+  const map = {};
+  allPaths().forEach(function(p){
+    if (!isJournal(p)) return;
+    const d = journalDate(p);
+    if (d) map[d] = p;
+  });
+  return map;
+}
+
+// 「这天算不算写了」：只认正文，标题 / 属性 / 查询都不算
+function journalHasContent(path){
+  const lines = content(path).split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++){
+    const s = lines[i].replace(/^\s*[-*+]\s*/, '').trim();
+    if (!s) continue;
+    if (/^#{1,6}\s/.test(s)) continue;
+    if (/^[A-Za-z][A-Za-z0-9_-]*::/.test(s)) continue;
+    if (/^\{\{query/.test(s)) continue;
+    return true;
+  }
+  return false;
+}
+
+// 日历格子里的一行摘要
+function journalPreview(path, n){
+  const t = content(path)
+    .replace(/^\s*[A-Za-z][A-Za-z0-9_-]*::.*$/gm, '')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*#{1,6}\s*/gm, '')
+    .replace(/\{\{[^}]*\}\}/g, '')
+    .replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, '$1')
+    .replace(/[*_`~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return t.slice(0, n || 42);
+}
+
+function countInMonth(y, m){
+  const prefix = y + '-' + pad2(m);
+  let n = 0;
+  allPaths().forEach(function(p){
+    if (!isJournal(p)) return;
+    const d = journalDate(p);
+    if (d && d.slice(0, 7) === prefix && journalHasContent(p)) n++;
+  });
+  return n;
+}
+
+function renderCalendarView(){
+  calInit();
+  const y = CAL.year, m = CAL.month;
+  const first    = new Date(y, m - 1, 1);
+  const gridFrom = new Date(y, m - 1, 1 - first.getDay());   // 回到当月 1 号所在周的周日
+  const todayIso = iso(TODAY);
+  const map      = journalMap();
+
+  let html = '<h1>📅 日历</h1>';
+  html += '<div class="meta"><span>点任意一天，直接开始写那天的日记</span>'
+        + '<span>写过的日子会显示摘要</span>'
+        + '<span style="color:var(--accent-deep)">今天是 ' + todayIso + '，之后的日期写不了</span>'
+        + '</div>';
+
+  html += '<div class="cal-head">'
+        +   '<button id="calPrev">◀</button>'
+        +   '<span class="cal-title">' + y + ' 年 ' + m + ' 月</span>'
+        +   '<button id="calNext">▶</button>'
+        +   '<button id="calToday">回到今天</button>'
+        +   '<span style="color:var(--muted);font-size:12.5px">本月写了 '
+        +     countInMonth(y, m) + ' 天</span>'
+        + '</div>'
+        + '<div class="cal-msg" id="calMsg"></div>';
+
+  html += '<div class="cal-grid">';
+  DOW.forEach(function(d, i){
+    html += '<div class="cal-dow' + ((i === 0 || i === 6) ? ' wk' : '') + '">' + d + '</div>';
+  });
+
+  for (let i = 0; i < 42; i++){
+    const d  = new Date(gridFrom.getFullYear(), gridFrom.getMonth(), gridFrom.getDate() + i);
+    const ds = iso(d);
+    const path = map[ds];
+    const written = !!(path && journalHasContent(path));
+    const out = (d.getMonth() + 1) !== m;
+    const future = ds > todayIso;                       // 严格大于今天 = 未来
+
+    let cls = 'cal-cell';
+    if (out) cls += ' out';
+    if (written) cls += ' has';
+    if (ds === todayIso) cls += ' today';
+    if (future) cls += ' future';
+
+    const tip = future
+      ? ds + '　未来的日期，写不了'
+      : ds + (written ? '　已写 ' + cleanChars(content(path)) + ' 字' : '　点一下开始写');
+
+    html += '<div class="' + cls + '" data-caldate="' + ds + '" title="' + attr(tip) + '">'
+          +   '<div class="cal-day">' + d.getDate() + '</div>';
+    if (written){
+      html += '<div class="cal-meta">' + cleanChars(content(path)) + ' 字</div>'
+            + '<div class="cal-prev">' + esc(journalPreview(path, 42)) + '</div>'
+            + '<div class="cal-dot"></div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  $main.innerHTML = html;
+}
+
+function setCalMsg(text){
+  const el = document.getElementById('calMsg');
+  if (el) el.textContent = text || '';
+}
+
+// 点日历上的某一天
+function openCalendarDay(ds){
+  const todayIso = iso(TODAY);
+
+  // 未来日期直接拒绝：不跳转、不建文件
+  if (ds > todayIso){
+    setCalMsg('不能写未来的日记 —— 今天是 ' + todayIso + '，' + ds + ' 还没到。');
+    return;
+  }
+
+  const map  = journalMap();
+  let path = map[ds];
+  let created = false;
+
+  if (!path){
+    const p = ds.split('-');
+    path = 'journals/' + p[0] + '_' + p[1] + '_' + p[2] + '.md';
+    setContent(path, NEW_JOURNAL_SKELETON);
+    created = true;
+  }
+
+  setCalMsg('');
+  state.view = 'page';
+  state.path = path;
+  state.editing = true;      // 直接进编辑，符合「点了那天就改那天」
+  pickFamily();
+  render();
+  $main.scrollTop = 0;
+  if (created) setAIStatus('');   // 清掉可能残留的提示
+}
+
+/* ---------- 表格：一行一篇（日记表 / 手册表） ---------- */
+function renderTableView(){
+  const scope = state.tableScope;
+  const paths = allPaths().filter(function(p){
+    return scope === 'journals' ? isJournal(p) : !isJournal(p);
+  });
+  if (scope === 'journals'){
+    paths.sort(function(a,b){ return (journalDate(b)||'').localeCompare(journalDate(a)||''); });
+  } else {
+    paths.sort(function(a,b){ return baseName(a).localeCompare(baseName(b),'zh'); });
+  }
+
+  const labelOf = function(p){
+    return scope === 'journals' ? (journalDate(p) || baseName(p)) : baseName(p);
+  };
+  const data = tableData(paths, labelOf);
+
+  let html = '<h1>🧮 表格视图</h1>';
+  html += '<div class="tabs">'
+        + '<span class="tab'+(scope==='journals'?' active':'')+'" data-scope="journals">🐱 日记表</span>'
+        + '<span class="tab'+(scope==='pages'?' active':'')+'" data-scope="pages">🎀 手册表</span>'
+        + '<span class="spacer"></span>'
+        + '<span style="color:var(--muted);font-size:12.5px">表头 = 内容里的 ## 标题　·　一行 = 一篇</span>'
+        + '</div>';
+
+  if (!data.rows.length){
+    html += '<div class="empty">这个范围内还没有内容。</div>';
+    $main.innerHTML = html; return;
+  }
+
+  html += '<div class="table-wrap"><table class="grid-table"><thead><tr>';
+  html += '<th class="corner">'+(scope==='journals'?'🗓️ 日期':'📄 页面')+'</th>';
+  data.cols.forEach(function(c){
+    html += '<th>'+(c.key ? withEmoji(c.label) : '🌱 （开头）')+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+  data.rows.forEach(function(r){
+    html += '<tr><td class="rowhead"><a data-goto="'+attr(r.path)+'">'+esc(r.label)+'</a>'
+          + (isEdited(r.path) ? '<span class="dot"></span>' : '') + '</td>';
+    data.cols.forEach(function(c){ html += '<td>'+rowCellHtml(r, c.key)+'</td>'; });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  $main.innerHTML = html;
+}
+
+/* ---------- 表格：单个页面（标题当表头，内容一行） ---------- */
+function renderSinglePageTable(path){
+  const secs = parseSections(path);
+  const named = secs.filter(function(s){ return s.heading; });
+  const pre = secs.filter(function(s){ return !s.heading && s.items.length; });
+  if (!named.length) return null;           // 没有 ## 标题就退回原文视图
+
+  let html = '';
+  if (pre.length){
+    const pitems = [];
+    pre.forEach(function(s){ s.items.forEach(function(it){ pitems.push(it); }); });
+    html += '<div class="preamble">'+itemsCell(pitems)+'</div>';
+  }
+  html += '<div class="table-wrap"><table class="grid-table"><thead><tr>';
+  named.forEach(function(s){ html += '<th>'+withEmoji(s.heading)+'</th>'; });
+  html += '</tr></thead><tbody><tr>';
+  named.forEach(function(s){ html += '<td>'+itemsCell(s.items)+'</td>'; });
+  html += '</tr></tbody></table></div>';
+  return html;
+}
+
+function renderPageView(){
+  if (!state.path){ $main.innerHTML = '<p>请从左侧选择一个页面。</p>'; return; }
+  const path = state.path;
+
+  if (state.editing){
+    const zn = splitZones(content(path));
+    $main.innerHTML =
+      '<h1>✏️ 编辑：'+esc(title(path))+'</h1>'
+      + '<div class="meta"><span>'+esc(path)+'</span></div>'
+      + '<div class="edit-bar">'
+      +   '<button class="primary" id="btnSave">💾 保存并提炼</button>'
+      +   '<button id="btnAI">🪄 只重新提炼</button>'
+      +   '<button id="btnDownload">下载 .md</button>'
+      +   '<button id="btnCancel">取消</button>'
+      +   '<button id="btnAICfg">⚙️ AI 设置</button>'
+      +   (splitConcise(content(path)).has ? '<button id="btnStripHead">🧹 移除顶部提炼内容</button>' : '')
+      +   '<button id="btnDelete2" class="danger">🗑 删除这一页</button>'
+      +   (isEdited(path) ? '<button id="btnRevert">还原成原始内容</button>' : '')
+      + '</div>'
+      + '<div id="aiPanel"></div>'
+      + cheerHtml()
+
+      // ---- 上：AI 区（只读，直接渲染出来，你改不了）----
+      + '<div class="zone zone-ro">'
+      +   '<div class="zone-head">✨ AI 提炼的小节'
+      +     '<span>自动生成，不用也不能在这里改</span></div>'
+      +   (zn.head
+          ? '<div class="zone-body">' + renderDocText(zn.head) + '</div>'
+          : '<div class="zone-empty">还没有提炼过。在下面写完原文，点「💾 保存并提炼」。</div>')
+      + '</div>'
+
+      // ---- 下：原文区（你写这里）----
+      + '<div class="zone zone-edit">'
+      +   '<div class="zone-head">📝 原文' + esc(zn.marker)
+      +     '<span>AI 只读这里，不会改它</span></div>'
+      +   '<textarea id="editor" spellcheck="false"></textarea>'
+      + '</div>'
+
+      + '<div class="zone-note">'
+      +   '保存只写入浏览器本地存储，不会动磁盘文件。要拿到文件请点「下载 .md」。<br>'
+      +   '「💾 保存并提炼」会先把原文存好，再让 AI 重写上面那四个小节；'
+      +   '四个小节的名字是「今天做了什么 / 工作和进展 / 感受 / 明天要做」。</div>';
+    document.getElementById('editor').value = zn.body;
+    paintAIPanel();
+    startCheer();
+    return;
+  }
+
+  let html = '<div class="page-top">'
+        +   '<div class="page-top-main">'
+        +     '<h1>'+emojiPre(emojiForPath(path))+esc(title(path))+'</h1>'
+        +     '<div class="meta">';
+  if (isEdited(path)) html += '<span style="color:var(--todo)">● 有未导出的本地修改</span>';
+  html +=       '<button id="btnEdit">编辑</button>'
+        +       '<button id="btnDownload2">下载 .md</button>'
+        +       '<button id="btnAIFromView">🪄 AI 整理</button>'
+        +       (splitConcise(content(path)).has ? '<button id="btnStripHead2">🧹 移除顶部提炼内容</button>' : '')
+        +       '<button id="btnDelete" class="danger">🗑 删除这一页</button>'
+        +     '</div>'
+        +     '<div class="tabs">'
+        +       '<span class="tab'+(state.pageMode==='raw'?' active':'')+'" data-pagemode="raw">📜 原文</span>'
+        +       '<span class="tab'+(state.pageMode==='table'?' active':'')+'" data-pagemode="table">🧮 表格</span>'
+        +       '<span class="tabs-path">'+esc(path)+'</span>'
+        +     '</div>'
+        +   '</div>'
+        +   '<div class="page-top-side">'+familyCornerHtml()+'</div>'
+        + '</div>';
+
+  const asTable = state.pageMode === 'table' ? renderSinglePageTable(path) : null;
+  if (asTable) html += asTable;
+  else html += renderDoc(path);
+  $main.innerHTML = html;
+}
+
+function renderSearchResults(){
+  const box = document.getElementById('searchResults');
+  if (!box) return;
+  if (!state.search.trim()){
+    box.innerHTML = '<div class="empty">输入关键词开始搜索。</div>';
+    return;
+  }
+  const hits = search(state.search);
+  const total = hits.reduce(function(a,h){ return a + h.matches.length; }, 0);
+  let html = '<div class="meta">在 '+hits.length+' 个页面中找到 '+total+' 处匹配</div>';
+  if (!hits.length) html += '<div class="empty">没有找到匹配内容。</div>';
+  hits.forEach(function(h){
+    html += '<div class="hit"><a data-goto="'+attr(h.path)+'">'+esc(title(h.path))
+          + '</a> <span style="color:var(--muted);font-size:12.5px">'+esc(h.path)
+          + ' · '+h.matches.length+' 处</span>';
+    h.matches.slice(0,4).forEach(function(m){
+      html += '<div class="line">'+m.no+': '+highlight(m.line, state.search)+'</div>';
+    });
+    if (h.matches.length > 4) html += '<div class="line">… 还有 '+(h.matches.length-4)+' 处</div>';
+    html += '</div>';
+  });
+  box.innerHTML = html;
+}
+
+function renderSearchView(){
+  // 输入框只创建一次；输入时只重绘 #searchResults，
+  // 否则会打断中文输入法的候选词组合。
+  $main.innerHTML = '<h1>🔍 搜索</h1>'
+    + '<input id="searchBox" placeholder="输入关键词，搜索所有日记和手册页面…">'
+    + '<div id="searchResults"></div>';
+  const box = document.getElementById('searchBox');
+  box.value = state.search;
+  renderSearchResults();
+  box.focus();
+  box.setSelectionRange(box.value.length, box.value.length);
+}
+
+function renderStatsView(){
+  const days = journalStats();
+  const keys = Object.keys(days);
+  const st = streaks(keys);
+  const totalDays = keys.length;
+  const totalChars = keys.reduce(function(a,k){ return a + days[k]; }, 0);
+  const written = keys.map(function(k){ return days[k]; }).filter(function(n){ return n>0; });
+  const avg = written.length ? Math.round(totalChars/written.length) : 0;
+  const monthPrefix = iso(TODAY).slice(0,7);
+  const monthChars = keys.filter(function(k){ return k.slice(0,7) === monthPrefix; })
+                         .reduce(function(a,k){ return a + days[k]; }, 0);
+
+  let html = '<h1>📊 统计</h1><div class="meta"><span>🗓️ 数据来源：journals/ 目录</span></div>';
+  html += '<div class="cards">'
+    + card('🔥 当前连续记录', st.current+' 天')
+    + card('🏆 最长连续记录', st.longest+' 天')
+    + card('📔 累计记录天数', totalDays+' 天')
+    + card('✍️ 累计字数', totalChars.toLocaleString())
+    + card('📏 有记录日均字数', avg.toLocaleString())
+    + card('🗓️ 本月字数', monthChars.toLocaleString())
+    + '</div>';
+
+  // 热力图：每列一周，第一行周日
+  const weeks = 53;
+  const sinceSunday = TODAY.getDay(); // getDay(): 0=周日 … 6=周六
+  const end = dayOffset(6 - sinceSunday);
+  const start = new Date(end); start.setDate(start.getDate() - (weeks*7 - 1));
+
+  let cells = '';
+  const cursor = new Date(start);
+  while (cursor <= end){
+    if (cursor > TODAY){
+      cells += '<div class="cell empty"></div>';
+    } else {
+      const n = days[iso(cursor)] || 0;
+      const lv = levelOf(n);
+      const tip = iso(cursor)+'　'+n+' 字';
+      cells += '<div class="cell lv'+lv+'" title="'+attr(tip)+'"></div>';
+    }
+    cursor.setDate(cursor.getDate()+1);
+  }
+
+  html += '<div class="heat"><div style="font-size:14px;font-weight:600;margin-bottom:12px">'
+        + '🌈 字数热力图（最近 '+weeks+' 周）</div>'
+        + '<div class="heat-grid">'+cells+'</div>'
+        + '<div class="legend">少 '
+        + [0,1,2,3,4].map(function(i){ return '<div class="cell lv'+i+'"></div>'; }).join('')
+        + ' 多　<span>1–150 字 / 151–400 / 401–800 / 800+</span></div></div>';
+
+  const missing = [];
+  for (let i=0;i<30;i++){
+    const d = dayOffset(-i);
+    if (keys.indexOf(iso(d)) < 0) missing.push(iso(d));
+  }
+  html += '<div class="heat" style="margin-top:20px"><div style="font-size:14px;font-weight:600;'
+        + 'margin-bottom:10px">🫧 最近 30 天里没写日记的日子（'+missing.length+' 天）</div>'
+        + '<div class="missing-days">'+(missing.length ? missing.join('　') : '最近 30 天全勤。')
+        + '</div></div>';
+
+  $main.innerHTML = html;
+}
+
+function card(k, v){ return '<div class="card"><div class="k">'+esc(k)+'</div><div class="v">'+esc(v)+'</div></div>'; }
+
+/* =========================================================================
+   9. AI 内容整理
+   -------------------------------------------------------------------------
+   浏览器只能跟「允许跨域」的接口说话。DeepSeek 官方 API 不允许浏览器直连，
+   所以默认走本地代理：工具\ai-proxy.ps1（Key 存在代理那边，不进浏览器）。
+   接口地址可以在「⚙️ AI 设置」里改成任何 OpenAI 兼容地址。
+   ========================================================================= */
+
+const AI_LS = 'diary-ai-cfg';
+let AI_CFG = {
+  baseUrl:  'http://127.0.0.1:8787/v1',
+  model:    'deepseek-v4-pro',
+  apiKey:   '',
+  thinking: false,     // V4 默认开思考模式；提炼不需要，关掉更快更便宜
+
+  // ---- 名言朗读的音色 ----
+  ttsProvider:   'browser',   // 'browser' = 系统内置语音；'doubao' = 火山引擎（豆包音色）
+  ttsAppId:      '',
+  ttsToken:      '',
+  ttsCluster:    'volcano_tts',
+  ttsResourceId: '',          // 大模型音色才需要，例如 seed-tts-2.0
+  ttsVoiceZh:    'zh_female_shuangkuaisisi_uranus_bigtts',
+  ttsVoiceEn:    'ICL_uranus_en_female_charlie_tob',
+  ttsSpeed:      1
+};
+try {
+  const saved = JSON.parse(localStorage.getItem(AI_LS) || 'null');
+  if (saved && typeof saved === 'object') {
+    Object.keys(AI_CFG).forEach(function(k){
+      if (saved[k] != null) AI_CFG[k] = saved[k];
+    });
+  }
+} catch (e) { /* 忽略坏掉的配置 */ }
+
+function aiSaveCfg(){
+  try { localStorage.setItem(AI_LS, JSON.stringify(AI_CFG)); } catch (e) {}
+}
+
+/* ---------- 右下角提示条 ---------- */
+let TOAST_TIMER = null;
+function toast(msg, kind){
+  let el = document.getElementById('toast');
+  if (!el){
+    el = document.createElement('div');
+    el.id = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.className = 'toast on' + (kind ? ' ' + kind : '');
+  if (TOAST_TIMER) clearTimeout(TOAST_TIMER);
+  if (kind !== 'busy'){
+    TOAST_TIMER = setTimeout(function(){ el.className = 'toast'; }, 5200);
+  }
+}
+
+const AI_SYSTEM_PROMPT = [
+  '你是一个中文写作整理助手。',
+  '用户会给你一段随手写的、可能很乱、有错别字、有口水话的原始文字。',
+  '你的任务：把里面的核心内容提炼出来，放在最前面，方便以后快速回顾。',
+  '',
+  '硬性要求：',
+  '0. 原文里的事实一条都不能丢。要压缩的是口水话、重复、语气词和无关的铺垫。',
+  '   不要为了变短而丢信息（宁可长一点），也不要为了凑结构而编内容。',
+  '1. 按下面这个结构组织；某个小标题下确实没有内容，就整段省略，不要硬凑：',
+  '   ## 今天做了什么',
+  '   ## 工作和进展',
+  '   ## 感受 / 状态',
+  '   ## 明天要做',
+  '2. 每条内容单独一行，以 "- " 开头（这是 Logseq 的列表格式）。',
+  '3. 人名、项目名、产品名用双方括号包起来，例如 [[张三]]、[[示例项目]]。',
+  '4. 待办事项前面加 TODO，已经做完的加 DONE。',
+  '5. 不要编造原文里没有的信息，也不要替用户下结论。',
+  '6. 不要写任何解释、前言、总结、寒暄。',
+  '7. 直接输出 Markdown 正文，不要用 ``` 代码块包裹。'
+].join('\n');
+
+
+function aiEndpoint(){
+  return String(AI_CFG.baseUrl || '').replace(/\/+$/, '') + '/chat/completions';
+}
+
+// 形状与 OpenAI SDK 的 client.chat.completions.create() 一致，用 fetch 实现。
+// 浏览器里没必要引入整个 SDK：它本是 Node 库，还要把 Key 暴露在前端。
+async function aiChat(messages, opts){
+  const o = opts || {};
+  const headers = { 'Content-Type': 'application/json' };
+  if (AI_CFG.apiKey) headers['Authorization'] = 'Bearer ' + AI_CFG.apiKey;
+
+  const body = {
+    model: o.model || AI_CFG.model,
+    messages: messages,
+    temperature: (o.temperature != null) ? o.temperature : 0.3,
+    thinking: { type: AI_CFG.thinking ? 'enabled' : 'disabled' },
+    stream: false
+  };
+
+  let res;
+  try {
+    res = await fetch(aiEndpoint(), {
+      method: 'POST', headers: headers, body: JSON.stringify(body)
+    });
+  } catch (e) {
+    const err = new Error('连不上 ' + aiEndpoint());
+    err.hint = '常见原因：\n'
+      + '① 本地代理没启动 —— 双击「工具\\ai-proxy.bat」\n'
+      + '② 这个地址不让浏览器跨域（CORS）—— DeepSeek 官方 API 就是这种，必须走代理\n'
+      + '③ 端口或地址写错了';
+    throw err;
+  }
+
+  const raw = await res.text();
+
+  if (!res.ok){
+    const err = new Error('HTTP ' + res.status + '\n' + raw.slice(0, 400));
+    if (res.status === 401) err.hint = 'API Key 无效或没传。检查 工具\\ai-key.txt 是否存在且内容正确。';
+    else if (res.status === 402) err.hint = '账户余额不足，去 platform.deepseek.com 充值。';
+    else if (res.status === 429) err.hint = '触发限流，等一会儿再试。';
+    throw err;
+  }
+
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e){ throw new Error('返回的不是 JSON：\n' + raw.slice(0, 300)); }
+
+  const msg = data && data.choices && data.choices[0] && data.choices[0].message;
+  if (!msg) throw new Error('返回结构里没有 choices[0].message：\n' + raw.slice(0, 300));
+
+  // 思考模式下答案仍应在 content；万一为空，退回 reasoning_content
+  const text = msg.content || msg.reasoning_content || '';
+  return String(text).trim();
+}
+
+function stripFence(s){
+  return String(s)
+    .replace(/^\s*```[a-zA-Z]*\s*\r?\n/, '')
+    .replace(/\r?\n```\s*$/, '')
+    .trim();
+}
+
+/* =========================================================================
+   核心内容：写在同一个页面的顶部，原文原封不动留在分隔线下面
+   -------------------------------------------------------------------------
+   文件结构变成：
+
+     ## ✨ 核心内容
+     - 🕒 2026-10-07 17:12 由 AI 整理（原文在分隔线下方，没有被改动）
+     - **今天做了什么**
+       - 过了一遍 [[示例项目]] 的接口文档
+     - **工作和进展**
+       - 和 [[张三]] 对齐了方式
+
+     ---
+
+     （你原本写的东西，一个字符都没动，继续往下加就行）
+
+   重新整理只替换分隔线以上的部分，下面的原文永远不碰。
+   ========================================================================= */
+
+const CONCISE_HEAD = '## ✨ 核心内容';
+const CONCISE_SEP  = '---';
+// 后两个只作兼容保留：万一有旧版写过的文件，仍能正确切分，但不会再写入这两节
+const HEAD_SECTIONS = [CONCISE_HEAD, '## ✨ 核心内容', '## 🔍 校对'];
+
+// 把一篇文件拆成「顶部区（核心提炼）」和「原文」
+function splitConcise(text){
+  const src = String(text == null ? '' : text);
+  const lines = src.split(/\r?\n/);
+
+  let i = 0;
+  while (i < lines.length && !lines[i].trim()) i++;
+
+  // 只有文件以已知小节开头，才算存在顶部区
+  if (i >= lines.length || HEAD_SECTIONS.indexOf(lines[i].trim()) < 0){
+    return { has: false, head: '', original: src };
+  }
+
+  let j = i + 1;
+  while (j < lines.length && lines[j].trim() !== CONCISE_SEP) j++;
+  if (j >= lines.length){
+    return { has: true, head: lines.slice(i).join('\n').replace(/\s+$/, ''), original: '' };
+  }
+
+  return {
+    has: true,
+    head: lines.slice(i, j).join('\n').replace(/\s+$/, ''),
+    original: lines.slice(j + 1).join('\n').replace(/^[\s\r\n]+/, '')
+  };
+}
+
+// 移除页面顶部的提炼内容，把文件还原成纯原文。
+// 只删 --- 以上那一整段；文件里没有顶部区时什么都不做。
+function stripHeadBlock(srcPath){
+  const parts = splitConcise(content(srcPath));
+  if (!parts.has) return false;
+  setContent(srcPath, parts.original);
+  return true;
+}
+
+/* =========================================================================
+   分区：四个小节归 AI，原文归你
+   -------------------------------------------------------------------------
+     ## 今天做了什么        ← AI 提炼，用户不能直接改
+     ## 工作和进展          ← AI 提炼
+     ## 感受 / 状态         ← AI 提炼
+     ## 明天要做            ← AI 提炼
+     原文：                 ← 只有这条线以下是你写的
+       1、干活：上午把办公室的卫生搞了……
+   ========================================================================= */
+
+// 这四个小节归 AI。名字允许几种写法，省得因为你换了说法就认不出来。
+const AI_SECTION_KEYS = [
+  '今天做了什么', '工作和进展',
+  '感受状态', '感受和状态', '感受与状态',
+  '明天要做', '明天要做的'
+];
+
+function normSectionName(s){
+  return String(s == null ? '' : s).replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '');
+}
+function isAiSectionName(name){
+  return AI_SECTION_KEYS.indexOf(normSectionName(name)) >= 0;
+}
+
+// 「原文：」这条线。允许带列表符号、带 #、全角半角冒号
+const RAW_MARK_RE = /^\s*(?:[-*+]\s+)?(?:#{1,6}\s*)?原文\s*[：:]\s*$/;
+
+// 把一篇文件切成「AI 小节区」和「原文区」
+function splitZones(text){
+  const src   = String(text == null ? '' : text);
+  const lines = src.split(/\r?\n/);
+
+  for (let i = 0; i < lines.length; i++){
+    if (RAW_MARK_RE.test(lines[i])){
+      return {
+        has:    true,
+        head:   lines.slice(0, i).join('\n').replace(/\s+$/, ''),
+        marker: lines[i].trim() || '原文：',
+        body:   lines.slice(i + 1).join('\n').replace(/^[\s\r\n]+/, '')
+      };
+    }
+  }
+  // 没有「原文：」这条线 —— 整篇都当原文，AI 区还是空的
+  return { has: false, head: '', marker: '原文：', body: src.replace(/^[\s\r\n]+/, '') };
+}
+
+// 把原文里残留的四个小节剪掉（它们已经归 AI 了，留着就会重复）
+function stripAiSections(body){
+  const lines = String(body == null ? '' : body).split(/\r?\n/);
+  const out = [];
+  let skipping = false;
+
+  lines.forEach(function(line){
+    const t = line.trim();
+    const hm = t.match(/^(?:[-*+]\s+)?#{1,6}\s+(.+?)\s*$/);
+
+    if (hm){
+      skipping = isAiSectionName(hm[1]);
+      if (skipping) return;
+    } else if (skipping && t && !/^[-*+]\s+/.test(t)){
+      // 碰到不缩进的普通段落就停止跳过。
+      // 否则小节的「影响范围」会一路吃到文件结尾 —— 那是会丢正文的。
+      skipping = false;
+    }
+
+    if (!skipping) out.push(line);
+  });
+  return out.join('\n').replace(/^[\s\r\n]+/, '').replace(/\s+$/, '');
+}
+
+// 用原文区的内容重组整篇文件
+function composeFile(srcPath, rawBody){
+  const z = splitZones(content(srcPath));
+  const body = stripAiSections(rawBody);
+  return (z.head ? z.head + '\n\n' : '') + z.marker + '\n\n' + body + '\n';
+}
+
+// 把 AI 提炼出来的四个小节写进 AI 区，原文区只做「剪掉残留小节」这一件事。
+// 剪是必须的：原文里要是还留着老的 ## 今天做了什么，页面上就会同一件事出现两遍。
+// 不会丢信息 —— 传去给 AI 的正是剪之前的原文，内容已经被提炼进新的小节里了。
+function applyAiSections(srcPath, aiText){
+  const z    = splitZones(content(srcPath));
+  const head = String(aiText == null ? '' : aiText).replace(/\s+$/, '');
+  const body = stripAiSections(z.body);
+  setContent(srcPath, (head ? head + '\n\n' : '') + z.marker + '\n\n' + body + '\n');
+  return body;
+}
+/* ---------- AI 面板状态与绘制 ---------- */
+
+let AI_UI = { mode:'', busy:false, result:'', msg:'', err:false };
+
+function paintAIPanel(){
+  const box = document.getElementById('aiPanel');
+  if (!box) return;
+
+  if (AI_UI.busy){
+    box.innerHTML = '<div class="ai-panel"><h4>✨ AI 提炼中…</h4>'
+      + '<div class="ai-msg">正在请求 ' + esc(AI_CFG.model) + '，长文本可能要等十几秒。</div></div>';
+    return;
+  }
+
+  if (AI_UI.mode === 'cfg'){
+    box.innerHTML = '<div class="ai-panel"><h4>⚙️ AI 设置</h4>'
+      + '<div class="ai-field"><label>接口地址</label>'
+      +   '<input id="aiBaseUrl" value="' + attr(AI_CFG.baseUrl) + '" placeholder="http://127.0.0.1:8787/v1"></div>'
+      + '<div class="ai-field"><label>模型</label>'
+      +   '<input id="aiModel" value="' + attr(AI_CFG.model) + '" placeholder="deepseek-v4-pro"></div>'
+      + '<div class="ai-field"><label>API Key</label>'
+      +   '<input id="aiKey" value="' + attr(AI_CFG.apiKey) + '" placeholder="走本地代理时留空"></div>'
+      + '<div class="ai-field"><label>思考模式</label>'
+      +   '<span style="font-size:12.5px;color:var(--text)">'
+      +     '<input type="checkbox" id="aiThinking"' + (AI_CFG.thinking ? ' checked' : '') + '>'
+      +     ' 开启（更慢更贵；提炼日记一般用不上）</span></div>'
+
+      + '<div class="ai-field"><label>名言音色</label>'
+      +   '<span style="font-size:12.5px;color:var(--text)">'
+      +     '<label style="cursor:pointer"><input type="radio" name="ttsProv" value="browser"'
+      +       (AI_CFG.ttsProvider !== 'doubao' ? ' checked' : '') + '> 系统内置</label>'
+      +     '　<label style="cursor:pointer"><input type="radio" name="ttsProv" value="doubao"'
+      +       (AI_CFG.ttsProvider === 'doubao' ? ' checked' : '') + '> 豆包（火山引擎）</label>'
+      +   '</span></div>'
+      + '<div class="ai-field"><label>豆包 AppID</label>'
+      +   '<input id="ttsAppId" value="' + attr(AI_CFG.ttsAppId) + '" placeholder="火山引擎语音合成的 AppID"></div>'
+      + '<div class="ai-field"><label>Access Token</label>'
+      +   '<input id="ttsToken" value="' + attr(AI_CFG.ttsToken) + '" placeholder="Access Token"></div>'
+      + '<div class="ai-field"><label>cluster</label>'
+      +   '<input id="ttsCluster" value="' + attr(AI_CFG.ttsCluster) + '" placeholder="volcano_tts"></div>'
+      + '<div class="ai-field"><label>音色代次</label>'
+      +   '<input id="ttsResourceId" value="' + attr(AI_CFG.ttsResourceId) + '"'
+      +     ' placeholder="留空；大模型音色填 seed-tts-2.0"></div>'
+      + '<div class="ai-field"><label>中文音色</label>'
+      +   '<input id="ttsVoiceZh" list="ttsVoices" value="' + attr(AI_CFG.ttsVoiceZh) + '"></div>'
+      + '<div class="ai-field"><label>英文音色</label>'
+      +   '<input id="ttsVoiceEn" list="ttsVoices" value="' + attr(AI_CFG.ttsVoiceEn) + '"></div>'
+      + voiceDatalistHtml()
+      + '<div class="ai-msg" style="margin-top:0">'
+      +   '中文/英文音色可以直接粘 voice_type，也可以从下拉里选常用款。'
+      +   '豆包走本地代理转发，密钥只存在浏览器里。填完保存，回页面点 🔊 试听。</div>'
+      + '<div class="ai-row"><button class="primary" id="btnAISaveCfg">保存设置</button>'
+      +   '<button id="btnAITest">🔌 测试连接</button>'
+      +   '<span class="ai-msg" style="margin-top:0">推荐：Key 放代理里（工具\\ai-key.txt），这里留空。</span></div>'
+      + '</div>';
+    return;
+  }
+
+  if (AI_UI.mode === 'result'){
+    const has = !!AI_UI.result;
+    let html = '<div class="ai-panel"><h4>'
+             + (AI_UI.err ? '⚠️ 出错了' : '✨ 核心内容')
+             + '</h4>';
+    if (has) html += '<textarea class="ai-out" id="aiOut">' + esc(AI_UI.result) + '</textarea>';
+    if (AI_UI.msg) html += '<div class="ai-msg' + (AI_UI.err ? ' err' : '') + '">' + esc(AI_UI.msg) + '</div>';
+    if (has){
+      html += '<div class="ai-row">'
+            +   '<button class="primary" id="btnAIAppend">➕ 追加到原文末尾</button>'
+            +   '<button id="btnAIDiscard">丢弃</button>'
+            + '</div>'
+            + '<div class="ai-msg">结果只显示在这里，不会写进你的文件。'
+            +   '想留就「追加到原文末尾」，想丢就点「丢弃」。</div>';
+    } else {
+      html += '<div class="ai-row"><button id="btnAIDiscard">知道了</button></div>';
+    }
+    html += '</div>';
+    box.innerHTML = html;
+    return;
+  }
+
+  box.innerHTML = '';
+}
+
+async function doAIOrganize(){
+  const ta = document.getElementById('editor');
+  if (!ta) return;
+
+  // 只把「原文」送去整理。编辑框里现在含顶部的核心内容，
+  // 整个送过去就变成拿摘要总结摘要，每点一次就更短一截。
+  const src = splitConcise(ta.value).original.trim();
+
+  if (!src){
+    AI_UI = { mode:'result', busy:false, result:'', err:true,
+              msg:'分隔线下面还没有可整理的原文。\n先在编辑框底部写点东西吧。' };
+    paintAIPanel();
+    return;
+  }
+
+  AI_UI = { mode:'', busy:true, result:'', msg:'', err:false };
+  paintAIPanel();
+
+  try {
+    const out = stripFence(await aiChat([
+      { role:'system', content: AI_SYSTEM_PROMPT },
+      { role:'user',   content: src }
+    ]));
+    AI_UI = {
+      mode:'result', busy:false, result: out,
+      msg:'提炼完成。结果只显示在这里，你的原文一个字都不会被改动。\n'
+        + '想留下就点「➕ 追加到原文末尾」，想丢掉就点「丢弃」。\n'
+        + '提示：AI 可能改动原意，重要内容建议自己再扫一遍。',
+      err:false
+    };
+  } catch (e){
+    AI_UI = {
+      mode:'result', busy:false, result:'',
+      msg: (e && e.message ? e.message : String(e)) + (e && e.hint ? '\n\n' + e.hint : ''),
+      err:true
+    };
+  }
+  paintAIPanel();
+}
+
+
+/* =========================================================================
+   从原文提炼四个小节，写回 AI 区
+   -------------------------------------------------------------------------
+   原文区永远只读：applyAiSections 只替换「原文：」这条线以上的部分。
+   ========================================================================= */
+
+let EXTRACTING = false;
+
+async function extractToSections(srcPath){
+  if (EXTRACTING || !srcPath) return;
+
+  const body = splitZones(content(srcPath)).body.trim();
+  if (!body){
+    toast('原文是空的，没什么可提炼的。', 'err');
+    return;
+  }
+
+  EXTRACTING = true;
+  toast('✨ 正在从原文提炼四个小节…', 'busy');
+
+  try {
+    const out = stripFence(await aiChat([
+      { role:'system', content: AI_SYSTEM_PROMPT },
+      { role:'user',   content: body }
+    ]));
+    applyAiSections(srcPath, out);
+    if (state.view === 'page' && state.path === srcPath) render();
+    toast('✅ 四个小节已重写\n（今天做了什么 / 工作和进展 / 感受 / 明天要做；原文没被动过）', 'ok');
+  } catch (e){
+    const first = (e && e.message ? e.message : String(e)).split('\n')[0];
+    toast('⚠️ 提炼失败，原文已经保存好了、不受影响。\n' + first
+        + '\n想重试：进编辑页点「🪄 只重新提炼」。', 'err');
+  } finally {
+    EXTRACTING = false;
+  }
+}
+
+/* =========================================================================
+   10. 自检
+   -------------------------------------------------------------------------
+   因为这份文件交付时无法在作者本机运行验证，所以把检查做进页面里：
+   打开后顶部会显示「✓ 自检通过 N 项」或「✗ 自检：N 项失败」，
+   点一下就能看到每一项的结果。失败项请整段复制发给作者。
+   ========================================================================= */
+
+let SELF_TEST_REPORT = null;
+
+function runSelfTest(){
+  const saved = JSON.parse(JSON.stringify(state));
+  const report = [];
+
+  function check(label, fn){
+    try { report.push({ label:label, ok:true, detail:String(fn()) }); }
+    catch (e) { report.push({ label:label, ok:false, detail:(e && e.message) || String(e) }); }
+  }
+
+  check('读取内嵌图库', function(){ return allPaths().length + ' 个文件'; });
+  check('解析「## 标题」分区', function(){
+    let n = 0;
+    allPaths().forEach(function(p){ n += parseSections(p).length; });
+    return '共 ' + n + ' 个分区';
+  });
+  check('收集 TODO / DOING / DONE', function(){ return collectTasks().length + ' 条'; });
+  check('查询 (task TODO DOING)', function(){
+    return runQuery('(task TODO DOING)').length + ' 条结果';
+  });
+  check('查询 (and (task DONE) (between -7d today))', function(){
+    return runQuery('(and (task DONE) (between -7d today))').length + ' 条结果';
+  });
+  check('日记统计', function(){ return Object.keys(journalStats()).length + ' 天'; });
+  check('渲染：跨条目表格', function(){ state.view = 'table'; render(); return '正常'; });
+  check('渲染：单页表格', function(){
+    state.view = 'page'; state.pageMode = 'table';
+    state.path = saved.path || allPaths()[0];
+    render(); return '正常';
+  });
+  check('渲染：单页原文（每节一张卡片）', function(){
+    const path = allPaths().filter(isJournal)[0] || allPaths()[0];
+    if (!path) throw new Error('没有可测的页面');
+
+    const html = renderDoc(path);
+
+    // 结构完整性 —— 按 ## 切卡片最容易把标签切坏，必须先验这个
+    const opens  = {
+      ul:      (html.match(/<ul[ >]/g)      || []).length,
+      li:      (html.match(/<li[ >]/g)      || []).length,
+      section: (html.match(/<section[ >]/g) || []).length
+    };
+    const closes = {
+      ul:      (html.match(/<\/ul>/g)      || []).length,
+      li:      (html.match(/<\/li>/g)      || []).length,
+      section: (html.match(/<\/section>/g) || []).length
+    };
+    ['ul','li','section'].forEach(function(k){
+      if (opens[k] !== closes[k])
+        throw new Error('<'+k+'> 开 ' + opens[k] + ' 个、闭 ' + closes[k] + ' 个，不匹配');
+    });
+
+    const h2n = (html.match(/<h2[ >]/g) || []).length;
+
+    // 核心不变量：所有内容都必须落在卡片里，不许有裸露在框外的文字。
+    // 注意卡片可能带层级类（doc-card lv2），正则要容得下。
+    const outside = html.replace(/<section class="doc-card[^"]*">[\s\S]*?<\/section>/g, '').trim();
+    if (outside) throw new Error('有内容没被框住：' + outside.slice(0, 60));
+    if (html.indexOf('<section class="doc-card') !== 0)
+      throw new Error('第一张卡片没有从最开头就开始');
+
+    state.view = 'page'; state.path = path; state.pageMode = 'raw'; state.editing = false;
+    render();
+    const cards = document.querySelectorAll('.doc-card');
+    if (!cards.length) throw new Error('一张卡片都没渲染出来');
+
+    const map = Array.prototype.map.call(cards, function(c, i){
+      const h = c.querySelector('h1,h2');
+      const head = h ? h.textContent.trim().slice(0, 8) : '(无标题)';
+      const body = c.textContent.replace(/\s+/g, ' ').trim().slice(0, 20);
+      return (i + 1) + '[' + head + ']' + body;
+    });
+    return cards.length + ' 张卡片 ── ' + map.join(' ┃ ');
+  });
+  check('渲染：日历', function(){
+    state.view = 'calendar'; render();
+    const cells = document.querySelectorAll('[data-caldate]').length;
+    if (cells !== 42) throw new Error('日期格 ' + cells + ' 个，应为 42');
+    const fut = document.querySelectorAll('.cal-cell.future').length;
+    const head = document.querySelector('.cal-title');
+    return (head ? head.textContent : '?') + '，42 格，其中未来 ' + fut + ' 格已锁';
+  });
+  check('日历点选：打开已有日记', function(){
+    const map = journalMap();
+    const keys = Object.keys(map).sort();
+    if (!keys.length) throw new Error('没有解析出任何日记日期');
+    const ds = keys[keys.length - 1];
+    openCalendarDay(ds);                       // 真的走一遍点选逻辑
+    if (!state.editing) throw new Error('没有进入编辑状态');
+    if (state.path !== map[ds]) throw new Error('打开的路径不对：' + state.path);
+    if (!document.getElementById('editor')) throw new Error('编辑器没渲染出来');
+    return ds + ' → 编辑器已打开';
+  });
+  check('日历：未来日期被拦住', function(){
+    const t = new Date(TODAY);
+    t.setDate(t.getDate() + 3);
+    const ds = iso(t);
+
+    const editsBefore = Object.keys(EDITS).sort().join('|');
+    const pathBefore  = state.path;
+    const viewBefore  = state.view;
+
+    openCalendarDay(ds);                       // 应该被拒绝
+
+    if (Object.keys(EDITS).sort().join('|') !== editsBefore)
+      throw new Error('竟然为未来日期创建了文件');
+    if (state.path !== pathBefore) throw new Error('竟然跳转了页面');
+    if (state.view !== viewBefore) throw new Error('竟然切换了视图');
+    return ds + '（今天+3）已拒绝，没有产生任何文件';
+  });
+  check('右侧栏：每个视图都有内容', function(){
+    const views = ['calendar','table','ai','stats','search'];
+    const empty = [];
+    views.forEach(function(v){
+      state.view = v;
+      render();
+      const ctx = document.getElementById('context');
+      const len = ctx ? ctx.textContent.replace(/\s+/g, '').length : 0;
+      if (len < 30) empty.push(v + ' 只有 ' + len + ' 字');
+    });
+    if (empty.length) throw new Error('侧栏几乎空白：' + empty.join('；'));
+    return views.length + ' 个视图的右侧栏都填满了';
+  });
+  check('渲染：三丽鸥家族角落', function(){
+    state.view = 'page'; state.editing = false; render();
+    return document.getElementById('famCorner') ? '已挂载到右上角' : '未挂载';
+  });
+  check('名言库：中英双语解析', function(){
+    if (ALL_QUOTES.length !== 125)
+      throw new Error('名言 ' + ALL_QUOTES.length + ' 条，应为 125');
+
+    const bad = [];
+    ALL_QUOTES.forEach(function(q, i){
+      const p = splitQuote(q.raw);
+      if (!p.zh)                     bad.push('#' + (i+1) + ' 缺中文');
+      else if (!p.en)                bad.push('#' + (i+1) + ' 缺英文');
+      else if (!p.from)              bad.push('#' + (i+1) + ' 缺出处');
+      else if (/^[^A-Za-z]/.test(p.en) === false && p.en.length < 4)
+                                     bad.push('#' + (i+1) + ' 英文过短');
+    });
+    if (bad.length) throw new Error('解析不全：' + bad.slice(0, 6).join('、')
+      + (bad.length > 6 ? ' 等 ' + bad.length + ' 条' : ''));
+
+    // 撇号那几条最容易在切分时出错，单独确认
+    const apo = ALL_QUOTES.filter(function(q){
+      return q.raw.indexOf("'tis to another sea") >= 0;
+    })[0];
+    if (!apo) throw new Error("含 'tis 的爱默森那条没找到");
+    const ap = splitQuote(apo.raw);
+    if (ap.from.indexOf('Emerson') < 0) throw new Error('爱默森那条出处切错了：' + ap.from);
+    if (ap.en.indexOf("'tis") < 0)      throw new Error('英文正文里丢了 \'tis');
+
+    const pudding = ALL_QUOTES.filter(function(q){ return q.raw.indexOf("Pudd'nhead") >= 0; })[0];
+    if (!pudding || splitQuote(pudding.raw).from.indexOf("Pudd'nhead") < 0)
+      throw new Error("Pudd'nhead Wilson 那条出处切错了");
+
+    const sample = splitQuote(ALL_QUOTES[0].raw);
+    return ALL_QUOTES.length + ' 条，中英出处齐全（含撇号 2 条）· 例：' + sample.zh.slice(0, 12) + '…';
+  });
+  check('AI 客户端', function(){
+    if (typeof aiChat !== 'function') throw new Error('aiChat 未定义');
+    if (typeof aiEndpoint !== 'function') throw new Error('aiEndpoint 未定义');
+    return '接口 ' + aiEndpoint() + ' · 模型 ' + (AI_CFG.model || '(未设)');
+  });
+  check('AI 面板函数', function(){
+    if (typeof paintAIPanel !== 'function') throw new Error('paintAIPanel 未定义');
+    if (typeof doAIOrganize !== 'function') throw new Error('doAIOrganize 未定义');
+    return '已就绪（未联网测试）';
+  });
+  check('AI：核心内容块解析', function(){
+    const withBlock = CONCISE_HEAD + '\n- 🕒 时间\n- **今天做了什么**\n  - 甲\n\n---\n\n- 我的原文第一行\n- 第二行\n';
+    const p = splitConcise(withBlock);
+    if (!p.has) throw new Error('没识别出核心内容块');
+    if (p.original.indexOf('我的原文第一行') < 0) throw new Error('原文没切出来：' + p.original);
+    if (p.original.indexOf('今天做了什么') >= 0) throw new Error('核心内容内容漏进原文了');
+
+    const plain = splitConcise('- 只有原文\n- 第二行\n');
+    if (plain.has) throw new Error('没有核心内容却被判成有');
+    if (plain.original.indexOf('只有原文') < 0) throw new Error('纯原文时内容丢了');
+
+    return '有块 / 无块 两种都切对了';
+  });
+  check('AI：不会拿摘要总结摘要', function(){
+    const fake = CONCISE_HEAD + '\n- 🕒 时间\n- **这段摘要不该被再摘要**\n\n---\n\n- 这是真正的原文\n';
+    const sent = splitConcise(fake).original.trim();
+    if (sent.indexOf('这段摘要不该被再摘要') >= 0) throw new Error('核心内容被当成原文送出去了');
+    if (sent.indexOf('这是真正的原文') < 0) throw new Error('真正的原文没被送出去');
+    return '送去整理的是：' + sent;
+  });
+  check('AI：不再往原文前面写东西', function(){
+    if (typeof applyConcise   !== 'undefined') throw new Error('applyConcise 还在');
+    if (typeof autoExtract    !== 'undefined') throw new Error('autoExtract 还在');
+    if (typeof AI_CFG.auto    !== 'undefined') throw new Error('AI_CFG.auto 还在');
+
+    AI_UI = { mode:'result', busy:false, result:'测试内容', msg:'', err:false };
+    state.view = 'page'; state.path = 'pages/示例项目.md'; state.editing = true;
+    render();
+    const gone = ['btnAIMakeConcise','btnAIViewConcise','btnAIReplace'];
+    const left = gone.filter(function(i){ return document.getElementById(i); });
+    const canAppend = !!document.getElementById('btnAIAppend');
+    state.editing = false;
+    AI_UI = { mode:'', busy:false, result:'', msg:'', err:false };
+    render();
+    if (left.length) throw new Error('这些按钮还在：' + left.join('、'));
+    if (!canAppend)  throw new Error('「追加到原文末尾」按钮不见了');
+    return '写回顶部的入口全部消失，只剩 复制 / 追加';
+  });
+  check('AI：能一键移除顶部提炼内容', function(){
+    const src = allPaths().filter(isJournal)[0] || allPaths()[0];
+    const before = content(src);
+    const wasEdited = isEdited(src);
+    const origTail = splitConcise(before).original;     // 纯原文，不含顶部区
+
+    const fake = CONCISE_HEAD + '\n- 🕒 时间 由 AI 提炼\n- **今天做了什么**\n  - 甲\n\n'
+               + CONCISE_SEP + '\n\n' + origTail;
+    setContent(src, fake);
+    if (!splitConcise(content(src)).has) throw new Error('造好的文件没被识别出顶部区');
+
+    if (!stripHeadBlock(src)) throw new Error('stripHeadBlock 说没有顶部区');
+    const after = content(src);
+    if (after.indexOf(CONCISE_HEAD) >= 0) throw new Error('顶部标题还在');
+    if (after.indexOf('甲') >= 0)          throw new Error('提炼内容没删干净');
+    if (after !== origTail)                throw new Error('原文没能逐字符还原');
+
+    if (stripHeadBlock(src)) throw new Error('没有顶部区却报告删除了');
+
+    if (wasEdited) setContent(src, before);
+    else { delete EDITS[src]; persist(); }
+
+    return '移除后与原文逐字符相同（' + origTail.length + ' 字符）';
+  });
+  check('AI：校对功能已彻底移除', function(){
+    if (typeof AI_PROOF_PROMPT !== 'undefined') throw new Error('AI_PROOF_PROMPT 还在');
+    if (typeof doAIProofread  !== 'undefined') throw new Error('doAIProofread 还在');
+    if (typeof applyProofread !== 'undefined') throw new Error('applyProofread 还在');
+    state.view = 'page'; state.path = 'pages/示例项目.md'; state.editing = true; render();
+    const ids = ['btnAIProof','btnAIProofFromView','btnAIWriteProof','btnAICopyProof'];
+    const left = ids.filter(function(i){ return document.getElementById(i); });
+    state.editing = false; render();
+    if (left.length) throw new Error('残留按钮：' + left.join('、'));
+    return '四个校对入口全部消失';
+  });
+  check('侧栏：空白日记不进列表', function(){
+    const probe = 'journals/1999_01_01.md';
+    const had  = Object.prototype.hasOwnProperty.call(EDITS, probe);
+    const keep = EDITS[probe];
+
+    // ① 只有骨架标题、没有正文 → 应当算空白
+    setContent(probe, NEW_JOURNAL_SKELETON);
+    if (journalHasContent(probe)) throw new Error('只有骨架标题的日记没被判成空白');
+
+    state.view = 'page'; state.path = 'pages/示例项目.md';
+    render();
+    const shownBlank = document.getElementById('nav').innerHTML.indexOf('1999_01_01') >= 0;
+
+    // ② 补上一句正文 → 应当出现
+    setContent(probe, NEW_JOURNAL_SKELETON + '- 今天真的写了一句话\n');
+    if (!journalHasContent(probe)) throw new Error('写了正文的日记却被判成空白');
+    render();
+    const shownFilled = document.getElementById('nav').innerHTML.indexOf('1999_01_01') >= 0;
+
+    // ③ 清理探针
+    if (had) EDITS[probe] = keep; else delete EDITS[probe];
+    persist();
+
+    if (shownBlank)   throw new Error('空白日记出现在侧栏里了');
+    if (!shownFilled) throw new Error('写了正文的日记却没进侧栏');
+
+    const jr = allPaths().filter(isJournal);
+    const shown = jr.filter(function(p){ return journalHasContent(p); });
+    return '骨架 -> 隐藏，有正文 -> 显示（现有 ' + jr.length + ' 篇，其中空白 '
+         + (jr.length - shown.length) + ' 篇）';
+  });
+  check('删除 / 恢复页面', function(){
+    const probe   = 'pages/测试删除页.md';
+    const hadEdit = Object.prototype.hasOwnProperty.call(EDITS, probe);
+    const keepEdit= EDITS[probe];
+    const hadDel  = Object.prototype.hasOwnProperty.call(DELETED, probe);
+
+    setContent(probe, '- 这是用来测试删除的内容\n');
+    if (allPaths().indexOf(probe) < 0) throw new Error('新建的页面没进图库');
+
+    deletePage(probe);
+    if (allPaths().indexOf(probe) >= 0)    throw new Error('删除后还留在图库列表里');
+    if (content(probe) !== '')             throw new Error('删除后还能读到内容');
+    if (deletedPaths().indexOf(probe) < 0) throw new Error('删除记录没进「已删除」');
+
+    state.view = 'table'; render();
+    const navHtml = document.getElementById('nav').innerHTML;
+    // 注意：删掉的页面本来就应该出现在「🗑 已删除」区块里（否则没法恢复），
+    // 所以这里必须分区块断言，不能拿整个侧栏去搜。
+    if (navHtml.indexOf('🗑 已删除') < 0) throw new Error('侧栏没出现「🗑 已删除」区块');
+    const manualSeg = (navHtml.split('🎀 手册页面')[1] || '').split('🗑 已删除')[0];
+    const delSeg    = navHtml.split('🗑 已删除')[1] || '';
+    if (manualSeg.indexOf('测试删除页') >= 0)
+      throw new Error('已删除的页面还留在「手册页面」列表里');
+    if (delSeg.indexOf('测试删除页') < 0)
+      throw new Error('「已删除」区块里找不到它，就没法恢复了');
+
+    restorePage(probe);
+    if (allPaths().indexOf(probe) < 0)          throw new Error('恢复后不在图库里了');
+    if (content(probe).indexOf('测试删除') < 0) throw new Error('恢复后内容丢了');
+
+    // 内嵌图库里的页面同样要能删、能恢复
+    const rawPath = Object.keys(RAW).filter(function(p){ return !isJournal(p); })[0];
+    const rawLen  = (RAW[rawPath] || '').length;
+    deletePage(rawPath);
+    if (allPaths().indexOf(rawPath) >= 0) throw new Error('内嵌页面删除失败');
+    if (content(rawPath) !== '')          throw new Error('内嵌页面删除后还能读到内容');
+    restorePage(rawPath);
+    if (allPaths().indexOf(rawPath) < 0)  throw new Error('内嵌页面恢复失败');
+    if (rawLen < 10)                      throw new Error('内嵌页面本体是空的，测试没意义');
+
+    // 清理探针
+    delete EDITS[probe]; delete DELETED[probe];
+    if (hadEdit) EDITS[probe] = keepEdit;
+    if (hadDel)  DELETED[probe] = 1;
+    persist(); persistDeleted();
+    render();
+
+    return '删除 -> 从图库和侧栏消失；恢复 -> 内容完好（内嵌页面同样可恢复）';
+  });
+  check('删除线：全局已去掉', function(){
+    const css = (document.querySelector('style') || {}).textContent || '';
+    const hits = (css.match(/line-through/g) || []).length;
+    if (hits) throw new Error('样式表里还有 ' + hits + ' 处 line-through');
+
+    const paths = allPaths().filter(isJournal);
+    let done = 0, headings = [];
+    paths.forEach(function(p){
+      const doc = renderDoc(p);
+      done += (doc.match(/<li class="is-done">/g) || []).length;
+      const re = /<li class="is-done">([\s\S]*?)<\/li>/g;
+      let m;
+      while ((m = re.exec(doc))){
+        if (/<h[1-6][\s>]/.test(m[1]))
+          headings.push(m[1].replace(/<[^>]+>/g,'').slice(0, 14));
+      }
+    });
+    if (headings.length) throw new Error('标题被加了删除线：' + headings.join('｜'));
+
+    return '样式表 0 处 line-through；DONE 条目 ' + done + ' 条，现在只靠绿色徽章和淡色区分';
+  });
+  check('名言朗读：中英各一个喇叭', function(){
+    if (!SPEECH_OK) throw new Error('这个浏览器不支持 speechSynthesis');
+
+    state.view = 'table'; render();            // 非页面视图才会挂载角色角落
+    const corner = document.getElementById('famCorner');
+    if (!corner) throw new Error('角色角落没渲染出来');
+
+    const spks = corner.querySelectorAll('[data-say]');
+    if (spks.length !== 2)
+      throw new Error('喇叭 ' + spks.length + ' 个，应为中文、英文各一个');
+
+    const langs = Array.prototype.map.call(spks, function(s){ return s.dataset.lang; });
+    if (langs.indexOf('zh-CN') < 0) throw new Error('缺中文喇叭');
+    if (langs.indexOf('en-US') < 0) throw new Error('缺英文喇叭');
+
+    const zh = spks[0], en = spks[1];
+    if (!String(zh.dataset.say || '').trim()) throw new Error('中文喇叭没有可读文字');
+    if (!String(en.dataset.say || '').trim()) throw new Error('英文喇叭没有可读文字');
+    if (zh.dataset.say === en.dataset.say)    throw new Error('中英喇叭读的是同一段');
+
+    Array.prototype.forEach.call(spks, function(s){
+      if (s.parentNode.firstElementChild !== s)
+        throw new Error('喇叭没有排在文字前面');
+    });
+    if (typeof speakText !== 'function') throw new Error('speakText 未定义');
+    if (typeof stopSpeak !== 'function') throw new Error('stopSpeak 未定义');
+
+    const voices = (window.speechSynthesis.getVoices() || []);
+    const zhV = voices.filter(function(v){ return /^zh/i.test(v.lang); }).length;
+    const enV = voices.filter(function(v){ return /^en/i.test(v.lang); }).length;
+    return '中英各一个 🔊 排在文字前；系统语音 中文 ' + zhV + ' / 英文 ' + enV
+         + '（共 ' + voices.length + '）';
+  });
+  check('名言音色：豆包设置项齐全', function(){
+    AI_UI = { mode:'cfg', busy:false, result:'', msg:'', err:false };
+    state.view = 'page'; state.path = 'pages/示例项目.md'; state.editing = true;
+    render();
+
+    const ids = ['ttsAppId','ttsToken','ttsCluster','ttsResourceId','ttsVoiceZh','ttsVoiceEn'];
+    const missing = ids.filter(function(i){ return !document.getElementById(i); });
+    const provs = document.querySelectorAll('input[name="ttsProv"]');
+    const list  = document.getElementById('ttsVoices');
+
+    AI_UI = { mode:'', busy:false, result:'', msg:'', err:false };
+    state.editing = false; render();
+
+    if (missing.length) throw new Error('缺设置项：' + missing.join('、'));
+    if (provs.length !== 2) throw new Error('音色来源选项 ' + provs.length + ' 个，应为 2');
+    if (!list || list.options.length < 10) throw new Error('常用音色下拉是空的');
+    if (typeof doubaoSpeak  !== 'function') throw new Error('doubaoSpeak 未定义');
+    if (typeof browserSpeak !== 'function') throw new Error('browserSpeak 未定义');
+    if (aiProxyBase() !== 'http://127.0.0.1:8787')
+      throw new Error('代理根地址算错了：' + aiProxyBase());
+
+    return '6 个设置项 · 2 个来源 · ' + list.options.length + ' 个常用音色 · 代理 '
+         + aiProxyBase() + '/tts';
+  });
+  check('原文卡片：各级标题分别怎么分框', function(){
+    const cases = [
+      ['# 一级',       '- # 一级\n  - 甲'],
+      ['## 二级',      '- ## 二级\n  - 甲\n- ## 第二个'],
+      ['### 三级',     '- ### 三级\n  - 甲\n- ### 第二个'],
+      ['#### 四级',    '- #### 四级\n  - 甲'],
+      ['## 后无空格',  '- ##没空格\n  - 甲'],
+      ['普通项目',     '- 甲\n  - 乙']
+    ];
+    const out = cases.map(function(c){
+      const h = renderDocText(c[1]);
+      const boxes = (h.match(/<section class="doc-card/g) || []).length;
+      const heads = (h.match(/<h[1-6][ >]/g) || []).length;
+      return c[0] + '→' + boxes + '框/' + heads + '标题';
+    });
+
+    // 回归守卫：### 以前渲染成标题却不分框，标题会和上面的内容挤在一个框里
+    const lv3 = (renderDocText('- ### 三级\n  - 甲\n- ### 第二个')
+                 .match(/<section class="doc-card/g) || []).length;
+    if (lv3 !== 2) throw new Error('### 标题没有分框（' + lv3 + ' 个框，应为 2）');
+
+    // 反向守卫：#标签 不能被当成标题
+    const tag = renderDocText('- #经验\n  - 甲');
+    if (/<h[1-6][ >]/.test(tag)) throw new Error('#标签 被误判成标题了');
+
+    return out.join('　');
+  });
+  check('原文卡片：冒号小节标签也分框', function(){
+    // 用用户日记里的真实结构
+    const real = '- ## 明天要做\n'
+               + '  - TODO 打造自己的IP\n'
+               + '  - TODO 更新小猫猫头们的视频内容\n'
+               + '- 原文：\n'
+               + '\n'
+               + '  1、干活：上午把办公室的卫生搞了，倒了烟灰缸和茶水壶。\n';
+    const h = renderDocText(real);
+    const boxes = (h.match(/<section class="doc-card/g) || []).length;
+    const heads = (h.match(/<h2[ >]/g) || []).length;
+    if (boxes !== 2) throw new Error('分框 ' + boxes + ' 个，应为 2（明天要做 / 原文）');
+    if (heads !== 2) throw new Error('标题 ' + heads + ' 个，应为 2');
+
+    // 「原文：」必须独占一张卡，不能和 TODO 挤在一起
+    const first  = h.split('</section>')[0];
+    const second = h.split('</section>')[1] || '';
+    if (first.indexOf('TODO') < 0)  throw new Error('TODO 没在「明天要做」那张卡里');
+    if (first.indexOf('原文') >= 0) throw new Error('「原文：」还挤在「明天要做」那张卡里');
+    if (second.indexOf('原文') < 0) throw new Error('「原文：」没有独立成卡');
+    if (second.indexOf('卫生') < 0) throw new Error('原文正文没跟着「原文：」走');
+
+    // 反向：长句里的冒号不能被误判
+    const long = renderDocText('- 明天要买的东西：牛奶和鸡蛋，还有面包，记得早点去超市\n');
+    const lb = (long.match(/<section class="doc-card/g) || []).length;
+    if (lb !== 1) throw new Error('长句被误判成小节标题了（' + lb + ' 个框）');
+
+    // 反向：行内的冒号不能被误判
+    const mid = renderDocText('- 干活：今天把卫生搞了\n');
+    if ((mid.match(/<h2[ >]/g) || []).length) throw new Error('「干活：今天…」被误判成标题');
+
+    return '真内容 → 2 框（明天要做 / 原文）；长句和行内冒号都不误判';
+  });
+  check('分区：原文线以上归 AI，以下归你', function(){
+    // 用户日记里的真实结构
+    const real = '## 今天做了什么\n'
+               + '- 上午打扫办公室卫生\n'
+               + '## 工作和进展\n'
+               + '- 整理茶具\n'
+               + '## 明天要做\n'
+               + '- TODO 打造自己的IP\n'
+               + '\n原文：\n\n'
+               + '1、干活：上午把办公室的卫生搞了，倒了烟灰缸和茶水壶。\n';
+
+    const z = splitZones(real);
+    if (!z.has) throw new Error('没认出「原文：」这条线');
+    if (z.head.indexOf('明天要做') < 0) throw new Error('四个小节没进 AI 区');
+    if (z.head.indexOf('干活') >= 0)     throw new Error('原文漏进 AI 区了');
+    if (z.body.indexOf('干活') < 0)      throw new Error('原文没进原文区');
+    if (z.body.indexOf('明天要做') >= 0) throw new Error('小节漏进原文区了');
+
+    // 没有「原文：」时，整篇都当原文
+    const noMark = splitZones('随便写点东西\n再来一行\n');
+    if (noMark.has) throw new Error('没有标记却判成有');
+    if (noMark.body.indexOf('随便写') < 0) throw new Error('无标记时原文丢了');
+    if (noMark.head !== '') throw new Error('无标记时 AI 区应该是空的');
+
+    return 'AI 区 / 原文区 切分正确；无标记时整篇当原文';
+  });
+  check('分区：原文里残留的小节会被剪掉', function(){
+    const messy = '今天上午干了活\n'
+                + '## 今天做了什么\n'
+                + '- 这条是残留的\n'
+                + '## 明天要做\n'
+                + '- TODO 残留\n'
+                + '下午继续干活\n';
+    const clean = stripAiSections(messy);
+    if (clean.indexOf('残留') >= 0)  throw new Error('残留小节没剪掉：' + clean);
+    if (clean.indexOf('今天上午') < 0) throw new Error('正文被误删');
+    if (clean.indexOf('下午继续') < 0) throw new Error('正文被误删');
+
+    // 名字的几种写法都要认
+    ['今天做了什么','工作和进展','感受 / 状态','感受和状态','明天要做','明天要做的'].forEach(function(n){
+      if (!isAiSectionName(n)) throw new Error('认不出小节名：' + n);
+    });
+    if (isAiSectionName('随便一个小节')) throw new Error('把普通小节名误判成 AI 小节了');
+
+    return '残留小节剪掉、正文完好；6 种小节名都认得出';
+  });
+  check('分区：保存不会碰 AI 区', function(){
+    const src = allPaths().filter(isJournal)[0] || allPaths()[0];
+    const before = content(src);
+    const wasEdited = isEdited(src);
+
+    applyAiSections(src, '## 今天做了什么\n- 甲\n## 明天要做\n- TODO 乙');
+    const z1 = splitZones(content(src));
+    const bodyBefore = z1.body;
+
+    // 用户又写了一句原文，然后保存
+    setContent(src, composeFile(src, bodyBefore + '\n新写的一句原文\n'));
+    const z2 = splitZones(content(src));
+    if (z2.head !== z1.head) throw new Error('保存原文时把 AI 区改掉了！');
+    if (z2.body.indexOf('新写的一句原文') < 0) throw new Error('新写的原文没存上');
+    if (z2.body.indexOf('甲') >= 0 && z1.body.indexOf('甲') < 0)
+      throw new Error('AI 区的内容漏进原文区了');
+
+    if (wasEdited) setContent(src, before);
+    else { delete EDITS[src]; persist(); }
+
+    return '原文改动后 AI 区逐字符不变（' + z1.head.length + ' 字符）';
+  });
+  check('编辑页：AI 区只读、原文区可写', function(){
+    const path = allPaths().filter(isJournal)[0] || allPaths()[0];
+    const before = content(path);
+    const wasEdited = isEdited(path);
+
+    applyAiSections(path, '## 今天做了什么\n- 甲只读测试\n## 明天要做\n- TODO 乙只读测试');
+
+    state.view = 'page'; state.path = path; state.editing = true;
+    render();
+
+    const ro = document.querySelector('.zone-ro');
+    const ed = document.querySelector('.zone-edit');
+    const ta = document.getElementById('editor');
+
+    if (!ro) throw new Error('没有 AI 只读区');
+    if (!ed) throw new Error('没有原文编辑区');
+    if (!ta) throw new Error('原文输入框没渲染出来');
+    if (ta.readOnly) throw new Error('原文输入框被设成只读了 —— 用户要能写');
+    if (ro.querySelector('textarea,input')) throw new Error('AI 区里居然有输入控件');
+    if (ro.textContent.indexOf('甲只读测试') < 0) throw new Error('AI 区没显示提炼出来的内容');
+    if (ta.value.indexOf('今天做了什么') >= 0)
+      throw new Error('AI 小节漏进原文输入框了：' + ta.value.slice(0, 40));
+    if (ed.textContent.indexOf('原文') < 0) throw new Error('原文区的标题不对');
+
+    state.editing = false;
+    if (wasEdited) setContent(path, before);
+    else { delete EDITS[path]; persist(); }
+    render();
+
+    return 'AI 区无输入控件、原文框可写，且框里不含 AI 小节';
+  });
+  check('原文卡片：中文序号 + 条目编号', function(){
+    const text = '- ## 今天做了什么\n  - 甲\n  - 乙\n- 原文：\n  - 丙\n  - 丁\n';
+    const h = renderDocText(text);
+    if (h.indexOf('<span class="card-no">一、</span>') < 0) throw new Error('第一张卡片没有「一、」');
+    if (h.indexOf('<span class="card-no">二、</span>') < 0) throw new Error('第二张卡片没有「二、」');
+    if (h.indexOf('card-no-row') >= 0) throw new Error('有标题的卡片不该另起一行放序号');
+
+    // 中文序号的进位
+    const want = { 1:'一', 9:'九', 10:'十', 11:'十一', 19:'十九', 20:'二十', 25:'二十五', 99:'九十九' };
+    Object.keys(want).forEach(function(k){
+      if (cnOrdinal(Number(k)) !== want[k])
+        throw new Error('cnOrdinal(' + k + ') = ' + cnOrdinal(Number(k)) + '，应为 ' + want[k]);
+    });
+
+    // 条目编号是 CSS 计数器做的，验证规则还在
+    const css = (document.querySelector('style') || {}).textContent || '';
+    if (css.indexOf('counter-increment:item') < 0)
+      throw new Error('条目编号的 CSS 规则没了');
+    if (css.indexOf('counter(item)') < 0)
+      throw new Error('条目编号的 ::before 规则没了');
+
+    return '框：一、二、…（1/10/11/20/25/99 进位都对）；条目：CSS 计数器 1. 2. 3.';
+  });
+  check('编辑页：库洛米加油小伙伴', function(){
+    const path = allPaths().filter(isJournal)[0] || allPaths()[0];
+    const before = content(path);
+    const wasEdited = isEdited(path);
+
+    state.view = 'page'; state.path = path; state.editing = true;
+    render();
+
+    const box = document.getElementById('cheer');
+    const img = document.querySelector('.cheer-img');
+    const bub = document.getElementById('cheerBubble');
+
+    if (!box) throw new Error('编辑页没有加油小伙伴');
+    if (!img) throw new Error('没有加油图片');
+    if (!bub || !bub.textContent.trim()) throw new Error('气泡里没有打气的话');
+
+    // 首选必须是 GIF 槽位；候选链里必须留着库洛米立绘兜底
+    if (String(img.src).indexOf('kuromi-cheer.gif') < 0)
+      throw new Error('首选不是 GIF 槽位：' + img.src);
+    const cand = String(img.dataset.cand || '').split('|');
+    if (!cand.some(function(u){ return /d1%20\(1\)/.test(u) || /family-2/.test(u); }))
+      throw new Error('候选图里没有库洛米立绘：' + img.dataset.cand);
+
+    const css = (document.querySelector('style') || {}).textContent || '';
+    if (css.indexOf('cheerBounce') < 0)            throw new Error('弹跳动画的 CSS 没了');
+    if (css.indexOf('prefers-reduced-motion') < 0) throw new Error('没照顾「减少动效」偏好');
+
+    if (typeof startCheer !== 'function' || typeof stopCheer !== 'function')
+      throw new Error('轮播函数没定义');
+    if (CHEER_LINES.length < 5) throw new Error('打气的话太少');
+
+    // 离开编辑页必须停掉计时器，也不能留着那块 DOM
+    state.editing = false; render();
+    if (CHEER_TIMER) throw new Error('离开编辑页后计时器还在跑');
+    if (document.getElementById('cheer')) throw new Error('非编辑页不该有加油伙伴');
+
+    if (wasEdited) setContent(path, before);
+    else { delete EDITS[path]; persist(); }
+    render();
+
+    return 'GIF 优先 → 库洛米立绘兜底；弹跳 + 气泡轮播（' + CHEER_LINES.length
+         + ' 句）；离开编辑页自动停';
+  });
+  check('渲染：搜索', function(){ state.view = 'search'; state.search = '张三'; render(); return '正常'; });
+  check('渲染：空搜索', function(){ state.view = 'search'; state.search = ''; render(); return '正常'; });
+  check('渲染：统计与热力图', function(){ state.view = 'stats'; render(); return '正常'; });
+
+  Object.keys(saved).forEach(function(k){ state[k] = saved[k]; });
+  return report;
+}
+
+function renderSelfTestView(){
+  const report = SELF_TEST_REPORT;
+  if (!report){ $main.innerHTML = '<h1>🧪 自检结果</h1><div class="empty">还没有自检结果。</div>'; return; }
+
+  const bad = report.filter(function(r){ return !r.ok; }).length;
+  let html = '<h1>🧪 自检结果</h1>';
+  html += '<div class="meta">'
+        + (bad ? '<span style="color:var(--bow);font-weight:700">❌ '+bad+' 项失败</span>'
+               : '<span style="color:var(--done);font-weight:700">✅ 全部通过</span>')
+        + '<span>共 '+report.length+' 项</span>'
+        + '</div>';
+
+  html += '<div class="table-wrap"><table class="grid-table"><thead><tr>'
+        + '<th class="corner">📋 检查项</th><th style="min-width:70px">🎯 结果</th><th>🔎 详情</th>'
+        + '</tr></thead><tbody>';
+  report.forEach(function(r){
+    html += '<tr><td class="rowhead">'+esc(r.label)+'</td>'
+          + '<td style="color:'+(r.ok?'var(--done)':'var(--bow)')+';font-weight:700">'
+          + (r.ok ? '✅ 通过' : '❌ 失败') + '</td>'
+          + '<td><code>'+esc(r.detail)+'</code></td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  if (bad){
+    html += '<div style="margin-top:18px;background:#f9eef2;border:1px solid var(--bow);'
+          + 'border-radius:10px;padding:14px 18px;color:#78324a;font-size:13.5px">'
+          + '有检查项失败。<strong>请把标着「❌ 失败」的那几行整段复制发给我</strong>，我据此修复。</div>';
+  } else {
+    html += '<div style="margin-top:18px;background:#eef4f0;border:1px solid var(--done);'
+          + 'border-radius:10px;padding:14px 18px;color:#375742;font-size:13.5px">'
+          + '全部通过 —— 说明程序本身没问题。如果你看到的内容不对，是<strong>视图选择</strong>或'
+          + '<strong>演示数据</strong>的问题，直接告诉我你期望看到什么就行。</div>';
+  }
+  $main.innerHTML = html;
+}
+
+function refreshSelfTestBadge(){
+  const el = document.getElementById('selfTest');
+  let report;
+  try { report = runSelfTest(); }
+  catch (e) { report = [{ label:'自检本身', ok:false, detail:(e && e.message) || String(e) }]; }
+  SELF_TEST_REPORT = report;
+
+  const bad = report.filter(function(r){ return !r.ok; }).length;
+  if (el){
+    el.textContent = bad ? ('❌ 自检：'+bad+' 项失败') : ('✅ 自检：'+report.length+' 项通过');
+    el.style.color = bad ? 'var(--bow)' : 'var(--done)';
+    el.style.fontWeight = '700';
+    el.style.cursor = 'pointer';
+  }
+  render();   // 自检过程反复重绘过，这里把画面恢复成正常视图
+}
+
+function render(){
+  stopSpeak();                 // 换视图 / 重绘时把正在朗读的停掉
+  stopCheer();                 // 加油小伙伴的轮播计时器也一起停
+  rebuildIndex();
+  renderNav();
+  if (state.view === 'calendar') renderCalendarView();
+  else if (state.view === 'table') renderTableView();
+  else if (state.view === 'ai') renderAIView();
+  else if (state.view === 'selftest') renderSelfTestView();
+  else if (state.view === 'search') renderSearchView();
+  else if (state.view === 'stats') renderStatsView();
+  else renderPageView();
+  mountFamilyCorner();
+  renderContext();
+  syncHash();
+}
+
+// 把当前视图写进地址栏，方便收藏 / 刷新后回到同一页
+function syncHash(){
+  try {
+    const want = (state.view === 'page' || state.view === 'selftest') ? '' : '#' + state.view;
+    const have = location.hash || '';
+    if (want === have) return;
+    if (history && history.replaceState){
+      history.replaceState(null, '', location.pathname + location.search + want);
+    } else {
+      location.hash = want;
+    }
+  } catch (e) { /* file:// 下可能不允许，忽略即可 */ }
+}
+
+/* =========================================================================
+   8. 事件
+   ========================================================================= */
+
+document.addEventListener('click', function(e){
+  const t = e.target;
+  if (!t || typeof t.closest !== 'function') return;
+
+  const viewEl = t.closest('[data-view]');
+  if (viewEl){ state.view = viewEl.dataset.view; state.editing = false; render(); return; }
+
+  const scopeEl = t.closest('[data-scope]');
+  if (scopeEl){ state.tableScope = scopeEl.dataset.scope; render(); return; }
+
+  const modeEl = t.closest('[data-pagemode]');
+  if (modeEl){ state.pageMode = modeEl.dataset.pagemode; render(); return; }
+
+  if (t.id === 'btnSelfTest' || t.id === 'selfTest'){
+    state.view = 'selftest'; state.editing = false; render(); return;
+  }
+
+  if (t.closest('[data-famroll]')){
+    pickFamily();
+    render();                    // 页面视图由 renderPageView 重绘，不能用 mountFamilyCorner
+    return;
+  }
+
+  // 🔊 朗读名言（中文 / 英文各一个喇叭）—— 必须排在展开逻辑前面，
+  // 因为喇叭就嵌在 .fc-body 里面
+  const spk = t.closest('[data-say]');
+  if (spk){
+    speakText(spk, spk.dataset.say, spk.dataset.lang);
+    return;
+  }
+
+  // 名言默认截断到 3 行，点一下展开全文
+  const famQuote = t.closest('[data-famquote]');
+  if (famQuote){ famQuote.classList.toggle('on'); return; }
+
+  const qs = t.closest('[data-quicksearch]');
+  if (qs){
+    state.view = 'search';
+    state.search = qs.dataset.quicksearch;
+    state.editing = false;
+    render();
+    return;
+  }
+
+  const goto = t.closest('[data-goto]');
+  if (goto){ e.preventDefault(); go(goto.dataset.goto); return; }
+
+  const newPage = t.closest('[data-new]');
+  if (newPage){
+    const name = newPage.dataset.new;
+    const path = 'pages/' + name + '.md';
+    if (!RAW[path] && !EDITS[path]) setContent(path, '- type:: 页面\n- # '+name+'\n- ');
+    go(path);
+    return;
+  }
+
+  const tagEl = t.closest('[data-tag]');
+  if (tagEl){
+    state.view = 'search'; state.search = '#'+tagEl.dataset.tag; state.editing = false;
+    render(); return;
+  }
+
+  if (t.id === 'btnEdit'){ startEdit(); return; }
+  if (t.id === 'btnCancel'){ state.editing = false; render(); return; }
+  if (t.id === 'btnRevert'){ if (state.path) revert(state.path); state.editing = false; render(); return; }
+
+  // 移除顶部的提炼内容，把文件还原成纯原文
+  if (t.id === 'btnStripHead' || t.id === 'btnStripHead2'){
+    if (!state.path) return;
+    const ta = document.getElementById('editor');
+    if (t.id === 'btnStripHead' && ta) setContent(state.path, ta.value);   // 先落盘编辑框内容
+    if (!splitConcise(content(state.path)).has){
+      toast('这篇没有顶部提炼内容。', 'err');
+      return;
+    }
+    if (!confirm('会删掉本页顶部「## ✨ 核心内容」那一整段，连同 --- 分隔线。\n\n'
+               + '分隔线以下的原文完整保留，一个字符都不会动。\n\n继续吗？')) return;
+    stripHeadBlock(state.path);
+    if (t.id === 'btnStripHead'){
+      const ta2 = document.getElementById('editor');
+      if (ta2) ta2.value = content(state.path);
+      render();
+    } else {
+      render();
+    }
+    toast('🧹 顶部提炼内容已移除，页面现在只剩你的原文。', 'ok');
+    return;
+  }
+
+  // 删除一页 / 恢复一页
+  if (t.id === 'btnDelete' || t.id === 'btnDelete2'){
+    if (!state.path) return;
+    const path = state.path;
+
+    if (t.id === 'btnDelete2'){
+      const ta = document.getElementById('editor');
+      if (ta) setContent(path, ta.value);   // 先把编辑框落盘，好让「恢复」有东西可还原
+    }
+
+    const inRaw = Object.prototype.hasOwnProperty.call(RAW, path);
+    if (!confirm('删除「' + title(path) + '」？\n\n'
+      + (inRaw
+          ? '这一页来自内嵌图库。删掉后会从列表里消失，但图库本体写在 HTML 里，删不掉。\n'
+          : '这一页只存在于浏览器里。\n')
+      + '侧栏底部会出现「🗑 已删除」，点一下就能恢复。\n\n'
+      + '注意：只影响浏览器本地，磁盘上的 .md 文件要你自己处理。')) return;
+
+    deletePage(path);
+    state.editing = false;
+
+    const rest = allPaths();
+    const nextJournal = rest.filter(isJournal)[0];
+    state.path = nextJournal || rest[0] || '';
+    state.view = state.path ? 'page' : 'table';
+    pickFamily();
+    render();
+    toast('🗑 已删除「' + title(path) + '」。\n侧栏底部的「🗑 已删除」里可以恢复。', 'ok');
+    return;
+  }
+
+  const restoreEl = t.closest('[data-restore]');
+  if (restoreEl){
+    const p = restoreEl.dataset.restore;
+    restorePage(p);
+    render();
+    toast('↺ 已恢复「' + title(p) + '」。', 'ok');
+    return;
+  }
+  if (t.id === 'btnSave'){
+    const ta = document.getElementById('editor');
+    if (ta && state.path){
+      const path = state.path;
+      setContent(path, composeFile(path, ta.value));   // 先把原文存好，AI 区原样保留
+      state.editing = false;
+      render();
+      extractToSections(path);                          // 再让 AI 重写那四个小节
+    }
+    return;
+  }
+  if (t.id === 'btnDownload' || t.id === 'btnDownload2'){
+    const ta = document.getElementById('editor');
+    download(state.path, ta ? ta.value : content(state.path));
+    return;
+  }
+
+  /* ---------- AI 提炼 ---------- */
+  if (t.id === 'btnAI'){
+    const ta = document.getElementById('editor');
+    if (ta && state.path) setContent(state.path, composeFile(state.path, ta.value));
+    if (state.path) extractToSections(state.path);
+    return;
+  }
+
+  // 阅读页面直接点「AI 整理」：先进编辑器，再立刻整理
+  if (t.id === 'btnAIFromView'){
+    state.editing = true;
+    render();
+    doAIOrganize();
+    return;
+  }
+
+  // 一键自检：不写日记也能确认整条链路通不通
+  if (t.id === 'btnAITest'){
+    AI_UI = { mode:'result', busy:false, result:'', err:false, msg:'正在测试连接…' };
+    paintAIPanel();
+    aiChat([{ role:'user', content:'只回复两个字：可用' }])
+      .then(function(out){
+        AI_UI = { mode:'result', busy:false, result:'', err:false,
+                  msg:'✅ 连接成功\n接口：' + aiEndpoint() + '\n模型：' + AI_CFG.model
+                    + '\n模型回复：' + (out || '(空)') };
+        paintAIPanel();
+      })
+      .catch(function(e){
+        AI_UI = { mode:'result', busy:false, result:'', err:true,
+                  msg:'❌ 连接失败\n' + (e && e.message ? e.message : String(e))
+                    + (e && e.hint ? '\n\n' + e.hint : '') };
+        paintAIPanel();
+      });
+    return;
+  }
+
+  if (t.id === 'btnAICfg'){
+    AI_UI.mode = (AI_UI.mode === 'cfg' ? '' : 'cfg');
+    AI_UI.busy = false;
+    paintAIPanel();
+    return;
+  }
+
+  if (t.id === 'btnAISaveCfg'){
+    const b = document.getElementById('aiBaseUrl');
+    const m = document.getElementById('aiModel');
+    const k = document.getElementById('aiKey');
+    if (b) AI_CFG.baseUrl = b.value.trim();
+    if (m) AI_CFG.model   = m.value.trim();
+    if (k) AI_CFG.apiKey  = k.value.trim();
+    const th = document.getElementById('aiThinking');
+    if (th) AI_CFG.thinking = !!th.checked;
+
+    const prov = document.querySelector('input[name="ttsProv"]:checked');
+    if (prov) AI_CFG.ttsProvider = prov.value;
+    [['ttsAppId','ttsAppId'], ['ttsToken','ttsToken'], ['ttsCluster','ttsCluster'],
+     ['ttsResourceId','ttsResourceId'], ['ttsVoiceZh','ttsVoiceZh'], ['ttsVoiceEn','ttsVoiceEn']
+    ].forEach(function(pair){
+      const el = document.getElementById(pair[0]);
+      if (el) AI_CFG[pair[1]] = el.value.trim();
+    });
+
+    aiSaveCfg();
+    AI_UI = { mode:'result', busy:false, result:'', err:false,
+              msg:'设置已保存。\n接口：' + aiEndpoint() + '\n模型：' + AI_CFG.model
+                + '\n思考模式：' + (AI_CFG.thinking ? '开启' : '关闭') };
+    paintAIPanel();
+    return;
+  }
+
+
+
+  // 追加到原文末尾：原文已有内容不动，只在后面接一段
+  if (t.id === 'btnAIAppend'){
+    const ta = document.getElementById('editor');
+    const out = document.getElementById('aiOut');
+    if (ta && out){
+      ta.value = ta.value.replace(/\s+$/, '') + '\n\n' + out.value + '\n';
+    }
+    AI_UI = { mode:'', busy:false, result:'', msg:'', err:false };
+    paintAIPanel();
+    return;
+  }
+
+  if (t.id === 'btnAIDiscard'){
+    AI_UI = { mode:'', busy:false, result:'', msg:'', err:false };
+    paintAIPanel();
+    return;
+  }
+
+  /* ---------- AI 工作台 ---------- */
+  if (t.id === 'btnAITestView'){
+    setAIStatus('正在测试连接……');
+    aiChat([{ role:'user', content:'只回复两个字：可用' }])
+      .then(function(out){
+        setAIStatus('✅ 连接成功\n模型 ' + AI_CFG.model + ' 回复：' + (out || '(空)'));
+      })
+      .catch(function(e){
+        setAIStatus('❌ 连接失败\n' + (e && e.message ? e.message : String(e))
+          + (e && e.hint ? '\n' + e.hint : ''));
+      });
+    return;
+  }
+
+  if (t.id === 'btnAICfgView'){
+    AI_UI.mode = (AI_UI.mode === 'cfg' ? '' : 'cfg');
+    AI_UI.busy = false;
+    paintAIPanel();
+    return;
+  }
+
+  if (t.id === 'btnAILoadPage'){
+    if (state.path){
+      // 同样只载入原文，跳过顶部的核心内容
+      const all = content(state.path);
+      const v   = splitConcise(all).original;
+      AI_VIEW.input = v;
+      const inp = document.getElementById('aiInput');
+      if (inp) inp.value = v;
+      setAIStatus('已载入「' + title(state.path) + '」的原文'
+        + (v.length < all.length ? '（顶部的核心内容已跳过）' : '') + '。');
+    }
+    return;
+  }
+
+  if (t.id === 'btnAIViewRun'){ runAIView(); return; }
+
+  if (t.id === 'btnAICopyOut'){
+    const out = document.getElementById('aiOutput');
+    if (out && out.value){
+      AI_VIEW.output = out.value;
+      copyText(out.value);
+      setAIStatus('已复制到剪贴板。');
+    } else {
+      setAIStatus('还没有结果可以复制。');
+    }
+    return;
+  }
+
+  if (t.id === 'btnAIToPage'){
+    const out = document.getElementById('aiOutput');
+    if (!out || !out.value){ setAIStatus('还没有结果。'); return; }
+    if (!state.path){ setAIStatus('当前没有打开任何页面。'); return; }
+    AI_VIEW.output = out.value;
+    setContent(state.path, content(state.path).replace(/\s+$/, '') + '\n\n' + out.value);
+    setAIStatus('已追加到「' + title(state.path) + '」。\n'
+      + '注意：只存在浏览器本地，要落盘请打开那页点「下载 .md」。');
+    return;
+  }
+
+  /* ---------- 日历 ---------- */
+  if (t.id === 'calPrev'){
+    calInit();
+    CAL.month--;
+    if (CAL.month < 1){ CAL.month = 12; CAL.year--; }
+    render(); return;
+  }
+  if (t.id === 'calNext'){
+    calInit();
+    CAL.month++;
+    if (CAL.month > 12){ CAL.month = 1; CAL.year++; }
+    render(); return;
+  }
+  if (t.id === 'calToday'){
+    CAL = { year: TODAY.getFullYear(), month: TODAY.getMonth() + 1 };
+    render(); return;
+  }
+
+  const calCell = t.closest('[data-caldate]');
+  if (calCell){ openCalendarDay(calCell.dataset.caldate); return; }
+
+  if (t.id === 'btnReset'){
+    if (confirm('确定要清空你在浏览器里的所有修改吗？\n\n'
+      + '这会把每一页都还原成图库原始内容，并恢复全部已删除的页面。\n'
+      + '此操作不可撤销。')){
+      EDITS = {}; DELETED = {};
+      persist(); persistDeleted();
+      state.editing = false;
+      render();
+      toast('已还原成图库原始内容（含恢复已删除的页面）。', 'ok');
+    }
+    return;
+  }
+});
+
+document.addEventListener('input', function(e){
+  if (e.target.id === 'searchBox'){
+    state.search = e.target.value;
+    renderSearchResults();   // 只重绘结果区，不动输入框（保护中文输入法）
+  }
+});
+
+function download(path, text){
+  const blob = new Blob([text], { type:'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = baseName(path) + '.md';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+}
+
+/* ---------- 启动 ---------- */
+try {
+  // 支持直接打开某个视图：index.html#calendar / #table / #ai / #stats / #search
+  const HASH_VIEWS = ['calendar','table','ai','search','stats','selftest'];
+  try {
+    const h = (location.hash || '').replace(/^#/, '');
+    if (HASH_VIEWS.indexOf(h) >= 0) state.view = h;
+  } catch (e) { /* file:// 下偶尔不让读，忽略 */ }
+
+  state.path = 'journals/' + ymd(TODAY) + '.md';
+  if (allPaths().indexOf(state.path) < 0) state.path = 'pages/工作手册.md';
+  pickFamily();                  // 首次打开也随机一位
+  render();
+  refreshSelfTestBadge();
+} catch (err) {
+  window.showFatal('启动失败', (err && err.message) || String(err));
+}
+</script>
+</body>
+</html>
